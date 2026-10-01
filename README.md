@@ -1,83 +1,133 @@
-# SelfHub
+# FloriaApps
 
-App desktop (Tauri v2 + Vue 3 + Tailwind v4) com cara de navegador para consultar as APIs dos seus apps self-host.
+> Software, tools, and experiences for the **self-hosted** ecosystem.
 
-- Abas verticais à esquerda, uma por serviço
-- Conteúdo no centro, com cards de dados
-- Painel de detalhes que desliza pela direita
-- Visual Material 3: cores tonais, cantos arredondados e o app inteiro muda de cor conforme o serviço da aba ativa
-- Tema claro, escuro ou automático
+**FloriaApps** is an organization focused on building modern applications for people who want to keep their services, data, and infrastructure under their own control.
 
-Serviços suportados: **Jellyfin**, **Navidrome**, **Uptime Kuma**, **Gatus** e **Speedtest Tracker**.
+We create tools that connect self-hosted services, simplify their management, and make everyday use more enjoyable — with a focus on **desktop, web, music, and infrastructure**.
 
-## Requisitos
+## 🚀 Projects
 
-- Node.js 20 ou mais novo
-- Rust (https://rustup.rs)
-- Dependências de sistema do Tauri v2 para o seu sistema: https://v2.tauri.app/start/prerequisites/
+### [Floria SelfHub](https://github.com/FloriaApps/Floria-selfhub)
 
-## Como rodar
+A desktop dashboard for managing and monitoring your self-hosted services.
 
-```bash
-npm install
-npm run tauri dev      # abre o app com hot reload
-npm run tauri build    # gera o instalador em src-tauri/target/release/bundle
-```
+Built with:
 
-Para mexer só na interface, `npm run dev` abre no navegador (http://localhost:1420). Nesse modo as chamadas
-dependem do CORS de cada serviço e provavelmente serão bloqueadas. No app Tauri isso não acontece, porque as
-requisições saem pelo Rust (`@tauri-apps/plugin-http`).
+- **Tauri v2**
+- **Vue 3**
+- **Tailwind CSS 4**
+- **Rust**
 
-## Configurar cada serviço
+SelfHub provides a browser-inspired interface with tabs for each service and information organized into intuitive cards.
 
-| Serviço | O que informar |
-|---|---|
-| Jellyfin | Endereço e chave de API (Painel, Avançado, Chaves de API) |
-| Navidrome | Endereço, usuário e senha (API Subsonic) |
-| Uptime Kuma | Endereço e o slug da página de status (o final de `/status/<slug>`). O Kuma não tem API REST oficial, então o app lê a página de status pública |
-| Gatus | Só o endereço |
-| Speedtest Tracker | Endereço e token de API (com a permissão de rodar testes, se quiser usar o botão) |
+**Supported services:**
 
-Use **Testar conexão** no modal antes de salvar. Para HTTPS com certificado autoassinado, marque a opção correspondente.
+- Jellyfin
+- Navidrome
+- Uptime Kuma
+- Gatus
+- Speedtest Tracker
 
-## Atalhos
+The application uses independent adapters for each service, making it easy to add new integrations over time.
 
-| Atalho | Ação |
-|---|---|
-| Ctrl/Cmd + T | Nova aba |
-| Ctrl/Cmd + W | Fechar aba |
-| Ctrl/Cmd + B | Abrir ou fechar o painel direito |
-| Alt + seta esquerda ou direita | Voltar e avançar entre abas |
+---
 
-## Estrutura
+### [Floria Tune](https://github.com/FloriaApps/Floria-tune)
 
-```
-src/
-  services/      um adapter por serviço, mais registry.ts (nome, ícone, cor e campos de cada um)
-  stores/        Pinia: services (lista salva), tabs, snapshots (dados e polling de 30 s), ui
-  components/    TabSidebar, Toolbar, TabContent, HomeView, ServiceView, RightPanel, ServiceModal...
-  lib/           http (plugin-http com fallback para fetch), storage, theme (Material 3), format
-src-tauri/       Rust, tauri.conf.json e capabilities/default.json (permissões de HTTP, store e opener)
-```
+A modern music player designed to work with self-hosted music servers.
 
-## Adicionar um novo serviço
+Built with **TypeScript**, the project aims to provide a simple and enjoyable way to access and play your personal music library.
 
-1. Crie `src/services/meu-servico.ts` exportando uma função `(config) => ServiceAdapter`. O método `snapshot()` devolve
-   os cards (`stats`) e a lista do painel direito (`items`). Opcionalmente, `actions` cria botões de ação.
-2. Inclua o tipo em `ServiceType` (`services/types.ts`).
-3. Registre em `services/registry.ts`: `META` (nome, ícone Material Symbols, cor, campos do formulário) e `FACTORIES`.
+---
 
-A cor definida em `META` também vira o tema do app quando a aba está ativa.
+## 🧩 Ecosystem
 
-## Segurança
+In addition to our public projects, FloriaApps maintains tools and services that are part of our ecosystem:
 
-- Serviços, tokens e senhas ficam em texto puro no arquivo `selfhub.json`, na pasta de dados do app. Para algo mais
-  sério, troque `src/lib/storage.ts` por `tauri-plugin-stronghold` ou pelo cofre de senhas do sistema.
-- `capabilities/default.json` libera qualquer endereço `http://` e `https://`. Restrinja aos seus domínios ou IPs
-  se quiser mais segurança.
+| Project | Description |
+| --- | --- |
+| **Floria SelfHub** | Desktop dashboard for self-hosted services |
+| **Floria Tune** | Music player for self-hosted libraries |
+| **Floria RSS** | Tools for RSS and feed management |
+| **Floria Tasks** | Task management tools |
 
-## Android e iOS
+Some of these projects are still under private development and will be released as they mature.
 
-O Tauri v2 roda em mobile com o mesmo código: `npm run tauri android init` e depois `npm run tauri android dev`.
-Os ícones de mobile já foram gerados em `src-tauri/icons`. Para trocar o ícone, edite `app-icon.png` e rode
-`npm run tauri icon app-icon.png`.
+## 🎯 What We Build
+
+FloriaApps is guided by a few simple principles:
+
+- **Self-hosted** — Keep your data and services under your control.
+- **Open source** — Open source and community collaboration whenever possible.
+- **Modular** — Independent integrations that are easy to extend.
+- **Cross-platform** — Applications that work wherever you need them.
+- **Modern interfaces** — Powerful tools don't have to be difficult to use.
+- **Privacy** — Minimize unnecessary dependencies on external services.
+
+## 🛠️ Technologies
+
+Our stack varies between projects, but we primarily work with:
+
+**Frontend**
+
+- TypeScript
+- Vue
+- React
+- Tailwind CSS
+
+**Desktop**
+
+- Tauri
+- Rust
+
+**Backend & Infrastructure**
+
+- Node.js
+- Docker
+- REST APIs
+- PostgreSQL
+
+**Self-hosting**
+
+- Linux
+- Docker Compose
+- Navidrome
+- Jellyfin
+- and other self-hosted services
+
+## 📦 Philosophy
+
+FloriaApps was created around a simple idea:
+
+> **Self-hosting shouldn't have to mean a complicated experience.**
+
+We want to build tools that bridge the gap between powerful infrastructure and a simple user experience — making it easier for more people to run, manage, and enjoy their own services.
+
+> **Your services. Your data. Your control.**
+
+## 🤝 Contributing
+
+Found a bug, have an idea, or want to contribute?
+
+You can:
+
+1. Open an **Issue** in the relevant repository.
+2. Propose an improvement through a **Pull Request**.
+3. Join project discussions when available.
+
+Before contributing, check the `CONTRIBUTING.md` file in the relevant repository.
+
+## 📄 License
+
+Licensing may vary between projects. Check the `LICENSE` file in the corresponding repository for details.
+
+---
+
+<div align="center">
+
+**FloriaApps**
+
+*Building software for your self-hosted world.*
+
+</div>
