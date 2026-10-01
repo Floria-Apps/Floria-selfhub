@@ -57,27 +57,6 @@ The application uses independent adapters for each service, making it easy to ad
 
 ---
 
-### [Floria Tune](https://github.com/FloriaApps/Floria-tune)
-
-A modern music player designed to work with self-hosted music servers.
-
-Built with **TypeScript**, the project aims to provide a simple and enjoyable way to access and play your personal music library.
-
----
-
-## 🧩 Ecosystem
-
-In addition to our public projects, FloriaApps maintains tools and services that are part of our ecosystem:
-
-| Project | Description |
-| --- | --- |
-| **Floria SelfHub** | Desktop dashboard for self-hosted services |
-| **Floria Tune** | Music player for self-hosted libraries |
-| **Floria RSS** | Tools for RSS and feed management |
-| **Floria Tasks** | Task management tools |
-
-Some of these projects are still under private development and will be released as they mature.
-
 ## 🎯 What We Build
 
 FloriaApps is guided by a few simple principles:
