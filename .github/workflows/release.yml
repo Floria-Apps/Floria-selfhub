@@ -1,7 +1,20 @@
 name: Publish Release
 
 on:
-  workflow_dispatch: # Permite disparar o workflow manualmente no GitHub
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag de versão (ex: v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      release_name:
+        description: 'Título da Release'
+        required: false
+        default: 'Floria-selfhub v1.0.0'
+      release_notes:
+        description: 'Notas da versão / Texto da Release'
+        required: false
+        default: 'Melhorias gerais e correções de bugs.'
   push:
     tags:
       - 'v*'
@@ -38,8 +51,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Floria-selfhub ${{ github.ref_name }}'
-          releaseBody: 'Nova versão lançada automaticamente pelo GitHub Actions.'
+          tagName: ${{ inputs.tag_name || github.ref_name }}
+          releaseName: ${{ inputs.release_name || format('Floria-selfhub {0}', github.ref_name) }}
+          releaseBody: ${{ inputs.release_notes || 'Nova versão lançada automaticamente pelo GitHub Actions.' }}
           releaseDraft: false
           prerelease: false
