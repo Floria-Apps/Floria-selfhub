@@ -238,18 +238,4 @@ Features, integrations, and the interface may change as the project evolves.
 Built by [FloriaApps](https://github.com/FloriaApps)
 
 </div>
-=======
-## Segurança
-
-- Serviços, tokens e senhas ficam em texto puro no arquivo `selfhub.json`, na pasta de dados do app. Para algo mais
-  sério, troque `src/lib/storage.ts` por `tauri-plugin-stronghold` ou pelo cofre de senhas do sistema.
-- `capabilities/default.json` libera qualquer endereço `http://` e `https://`. Restrinja aos seus domínios ou IPs
-  se quiser mais segurança.
-
-## Android e iOS
-
-O Tauri v2 roda em mobile com o mesmo código: `npm run tauri android init` e depois `npm run tauri android dev`.
-Os ícones de mobile já foram gerados em `src-tauri/icons`. Para trocar o ícone, edite `app-icon.png` e rode
-`npm run tauri icon app-icon.png`.
->>>>>>> Stashed changes
 
