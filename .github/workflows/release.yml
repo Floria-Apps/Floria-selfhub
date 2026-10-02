@@ -1,9 +1,10 @@
 name: Publish Release
 
 on:
+  workflow_dispatch: # Permite disparar o workflow manualmente no GitHub
   push:
     tags:
-      - 'v*' # É ativado quando envias tags como v1.0.0, v1.1.0, etc.
+      - 'v*'
 
 jobs:
   publish-tauri:
