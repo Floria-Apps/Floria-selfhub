@@ -238,4 +238,3 @@ Features, integrations, and the interface may change as the project evolves.
 Built by [FloriaApps](https://github.com/FloriaApps)
 
 </div>
-
