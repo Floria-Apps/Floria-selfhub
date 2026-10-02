@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 # Floria SelfHub
 
 > **A modern desktop dashboard for your self-hosted services.**
@@ -20,88 +19,6 @@ Built for people who **self-host their own services** and want a simpler way to 
     <img src="https://img.shields.io/github/license/FloriaApps/Floria-selfhub?style=flat-square" alt="License">
   </a>
 </p>
-=======
-# SelfHub
-
-App desktop (Tauri v2 + Vue 3 + Tailwind v4) com cara de navegador para consultar as APIs dos seus apps self-host.
-
-- Abas verticais à esquerda, uma por serviço
-- Conteúdo no centro, com cards de dados
-- Painel de detalhes que desliza pela direita
-- Visual Material 3: cores tonais, cantos arredondados e o app inteiro muda de cor conforme o serviço da aba ativa
-- Tema claro, escuro ou automático
-- Tela de configurações (engrenagem na barra lateral ou Ctrl/Cmd + vírgula)
-- Idiomas: inglês (padrão) e português do Brasil, trocados no botão no rodapé da barra lateral
-
-Serviços suportados: **Jellyfin**, **Navidrome**, **Uptime Kuma**, **Gatus**, **Speedtest Tracker**, **Cup**, **What's up Docker (WUD)** e **AdGuard Home**.
-
-## Requisitos
-
-- Node.js 20 ou mais novo
-- Rust (https://rustup.rs)
-- Dependências de sistema do Tauri v2 para o seu sistema: https://v2.tauri.app/start/prerequisites/
-
-## Como rodar
-
-```bash
-npm install
-npm run tauri dev      # abre o app com hot reload
-npm run tauri build    # gera o instalador em src-tauri/target/release/bundle
-```
-
-Para mexer só na interface, `npm run dev` abre no navegador (http://localhost:1420). Nesse modo as chamadas
-dependem do CORS de cada serviço e provavelmente serão bloqueadas. No app Tauri isso não acontece, porque as
-requisições saem pelo Rust (`@tauri-apps/plugin-http`).
-
-## Configurar cada serviço
-
-| Serviço | O que informar |
-|---|---|
-| Jellyfin | Endereço e chave de API (Painel, Avançado, Chaves de API) |
-| Navidrome | Endereço, usuário e senha (API Subsonic) |
-| Uptime Kuma | Endereço e o slug da página de status (o final de `/status/<slug>`). Pode colar a URL inteira da página que o app extrai o slug. O Kuma não tem API REST oficial, então o app lê a página de status pública |
-| Gatus | Só o endereço |
-| Speedtest Tracker | Endereço e token de API (com a permissão de rodar testes, se quiser usar o botão) |
-| Cup | Só o endereço (a API não tem login). Usa `/api/v3/json`. O botão "Verificar agora" chama `/api/v3/refresh` |
-| What's up Docker | Endereço, usuário e senha (HTTP Basic). A partir da v9 o login é obrigatório; em versões antigas sem login, deixe vazio. Tokens de API pessoais da v9 ainda não são suportados |
-| AdGuard Home | Endereço, usuário e senha (vazios se o login estiver desligado). Mostra consultas, bloqueios e os domínios mais bloqueados, e permite pausar a proteção por 5 minutos ou reativá-la |
-
-Use **Testar conexão** no modal antes de salvar. Para HTTPS com certificado autoassinado, marque a opção correspondente.
-
-## Configurações
-
-Abra pela engrenagem na barra lateral. Dá para ajustar:
-
-- **Tema:** automático, claro ou escuro
-- **Idioma:** inglês ou português
-- **Cores dos serviços:** o app inteiro se tinge com a cor do serviço da aba ativa. Desligando, você escolhe uma cor de destaque fixa
-- **Ocultar endereços:** esconde IPs e URLs em todo o app (barra de pesquisa, cards, cabeçalho do serviço e lista de serviços). No formulário de edição o campo de endereço fica mascarado, com um botão para mostrar. Útil para prints e compartilhamento de tela
-- **Atualização automática:** desligada, 15 s, 30 s, 1 min ou 5 min
-- **Serviços:** abrir, editar e remover
-- **Exportar e importar:** copia um JSON com serviços e preferências, e importa colando o JSON. Serviços repetidos são ignorados. O JSON inclui tokens e senhas, então guarde com cuidado
-- **Restaurar preferências** e **remover todos os serviços**
-
-## Problemas no Linux (Wayland)
-
-Se a janela fechar com `Error 71 (Protocol error) dispatching to Wayland display`, é um problema do WebKitGTK,
-comum com GPU NVIDIA. O app já desliga o renderer DMABUF no Linux (`src-tauri/src/main.rs`). Se ainda cair, tente:
-
-```bash
-WEBKIT_DISABLE_COMPOSITING_MODE=1 npm run tauri dev
-GDK_BACKEND=x11 npm run tauri dev
-```
-
-## Atalhos
-
-| Atalho | Ação |
-|---|---|
-| Ctrl/Cmd + T | Nova aba |
-| Ctrl/Cmd + W | Fechar aba |
-| Ctrl/Cmd + B | Abrir ou fechar o painel direito |
-| Ctrl/Cmd + L ou K | Focar a barra de pesquisa |
-| Ctrl/Cmd + vírgula | Abrir configurações |
-| Alt + seta esquerda ou direita | Voltar e avançar entre abas |
->>>>>>> Stashed changes
 
 ## Estrutura
 
