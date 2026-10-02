@@ -1,0 +1,35 @@
+name: CI Build Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Instalar dependências do sistema (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libglib2.0-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Instalar dependências do Node
+        run: npm install
+
+      - name: Verificar compilação do Frontend e Tauri
+        run: npm run build
