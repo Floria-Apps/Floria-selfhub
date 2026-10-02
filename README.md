@@ -20,9 +20,6 @@ Built for people who **self-host their own services** and want a simpler way to 
   </a>
 </p>
 
-## Estrutura
-
-<<<<<<< Updated upstream
 ## ✨ Features
 
 ### 🖥️ One place for your services
