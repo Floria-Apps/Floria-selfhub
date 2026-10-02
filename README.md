@@ -54,8 +54,6 @@ Information is organized into cards so important data can be accessed quickly.
 
 ### 🌗 Dark & Light Mode
 
-SelfHub supports both dark and light interfaces.
-=======
 ```
 src/
   lib/i18n.ts    textos em inglês e português (adicione novas chaves nos dois)
@@ -66,18 +64,6 @@ src/
 src-tauri/       Rust, tauri.conf.json e capabilities/default.json (permissões de HTTP, store e opener)
 ```
 
-## Adicionar um novo serviço
-
-1. Crie `src/services/meu-servico.ts` exportando uma função `(config) => ServiceAdapter`. O método `snapshot()` devolve
-   os cards (`stats`) e a lista do painel direito (`items`). Opcionalmente, `actions` cria botões de ação.
-2. Inclua o tipo em `ServiceType` (`services/types.ts`).
-3. Registre em `services/registry.ts`: `META` (nome, ícone Material Symbols, cor, campos do formulário) e `FACTORIES`.
-4. Todo texto visível passa por `t('chave')`. Adicione a chave em inglês e português em `src/lib/i18n.ts`.
->>>>>>> Stashed changes
-
-A cor definida em `META` também vira o tema do app quando a aba está ativa.
-
-<<<<<<< Updated upstream
 ## 🔌 Supported Services
 
 <table align="center">
