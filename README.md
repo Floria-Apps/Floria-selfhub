@@ -252,3 +252,4 @@ O Tauri v2 roda em mobile com o mesmo código: `npm run tauri android init` e de
 Os ícones de mobile já foram gerados em `src-tauri/icons`. Para trocar o ícone, edite `app-icon.png` e rode
 `npm run tauri icon app-icon.png`.
 >>>>>>> Stashed changes
+
