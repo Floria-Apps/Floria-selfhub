@@ -18,7 +18,7 @@ const valueSize = computed(() => (props.stat.value.length > 9 ? 'text-2xl' : 'te
   <div class="flex min-h-36 flex-col justify-between gap-4 rounded-3xl p-5 transition-colors duration-500" :class="tone">
     <div class="flex items-start justify-between gap-2">
       <p class="text-sm font-medium opacity-80">{{ stat.label }}</p>
-      <span
+      <span aria-hidden="true"
         v-if="stat.icon"
         class="material-symbols-rounded grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
         style="background: color-mix(in oklab, currentColor 12%, transparent)"

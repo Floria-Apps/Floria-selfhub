@@ -1,5 +1,6 @@
 import { getJson, HttpError } from '../lib/http'
 import { fmtNumber } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { DetailItem, ServiceAdapter, ServiceConfig } from './types'
 
 export const gatus = (c: ServiceConfig): ServiceAdapter => ({
@@ -36,13 +37,13 @@ export const gatus = (c: ServiceConfig): ServiceAdapter => ({
     return {
       health: failing > 0 ? 'warn' : 'ok',
       stats: [
-        { label: 'Endpoints', value: fmtNumber(items.length), icon: 'vital_signs', tone: 'primary' },
-        { label: 'Saudáveis', value: fmtNumber(healthy), icon: 'check_circle', tone: 'secondary' },
-        { label: 'Com falha', value: fmtNumber(failing), icon: 'error', tone: failing > 0 ? 'tertiary' : 'neutral' },
-        { label: 'Resposta média', value: avg == null ? '-' : `${Math.round(avg)} ms`, icon: 'timer', tone: 'neutral' },
+        { label: t('gatus.endpoints'), value: fmtNumber(items.length), icon: 'vital_signs', tone: 'primary' },
+        { label: t('gatus.healthy'), value: fmtNumber(healthy), icon: 'check_circle', tone: 'secondary' },
+        { label: t('gatus.failing'), value: fmtNumber(failing), icon: 'error', tone: failing > 0 ? 'tertiary' : 'neutral' },
+        { label: t('gatus.avg'), value: avg == null ? '-' : `${Math.round(avg)} ms`, icon: 'timer', tone: 'neutral' },
       ],
-      itemsTitle: 'Endpoints',
-      emptyText: 'Nenhum endpoint configurado no Gatus.',
+      itemsTitle: t('gatus.endpoints'),
+      emptyText: t('gatus.empty'),
       items,
     }
   },

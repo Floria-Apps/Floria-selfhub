@@ -82,6 +82,12 @@ body {
   outline-offset: 2px;
 }
 
+/* Campos de texto já desenham o próprio anel de foco (ring), então sem contorno duplo */
+input:not([type='checkbox']):not([type='color']):focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb {
   background: color-mix(in oklab, var(--md-on-surface-variant) 35%, transparent);

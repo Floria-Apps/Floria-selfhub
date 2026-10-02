@@ -1,4 +1,5 @@
 import type { ServiceConfig } from '../services/types'
+import { t } from './i18n'
 
 export const isTauri = () =>
   typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
@@ -10,6 +11,14 @@ export interface ReqOptions {
   timeoutMs?: number
 }
 
+/** Cabeçalho Authorization: Basic, com suporte a caracteres fora do ASCII */
+export function basicAuth(user: string, pass: string): string {
+  const bytes = new TextEncoder().encode(`${user}:${pass}`)
+  let bin = ''
+  bytes.forEach((b) => (bin += String.fromCharCode(b)))
+  return `Basic ${btoa(bin)}`
+}
+
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
     super(message)
@@ -17,9 +26,9 @@ export class HttpError extends Error {
 }
 
 function messageFor(status: number) {
-  if (status === 401 || status === 403) return 'Acesso negado. Confira o token, o usuário e a senha.'
-  if (status === 404) return 'Endereço não encontrado. Confira a URL e a versão do serviço.'
-  return `O serviço respondeu com o erro ${status}.`
+  if (status === 401 || status === 403) return t('err.denied')
+  if (status === 404) return t('err.notFound')
+  return t('err.status', { status })
 }
 
 /**
@@ -55,8 +64,8 @@ export async function request(
   } catch (e) {
     if (e instanceof HttpError) throw e
     if ((e as Error).name === 'AbortError')
-      throw new Error('Tempo esgotado. O serviço não respondeu em 10 segundos.')
-    throw new Error('Não foi possível conectar. Confira o endereço e se o serviço está no ar.')
+      throw new Error(t('err.timeout'))
+    throw new Error(t('err.connect'))
   } finally {
     clearTimeout(timer)
   }

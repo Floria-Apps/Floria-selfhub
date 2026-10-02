@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { META } from './services/registry'
 import { useServices } from './stores/services'
 import { useSnapshots } from './stores/snapshots'
 import { useTabs } from './stores/tabs'
 import { useUi } from './stores/ui'
-import { applyTheme, DEFAULT_SEED } from './lib/theme'
+import { applyTheme } from './lib/theme'
+import { locale } from './lib/i18n'
 import TabSidebar from './components/TabSidebar.vue'
 import Toolbar from './components/Toolbar.vue'
 import TabContent from './components/TabContent.vue'
@@ -19,8 +20,16 @@ const tabs = useTabs()
 const snaps = useSnapshots()
 
 // Cor dinâmica: o app inteiro "tinge" conforme o serviço da aba ativa
-const seed = computed(() => (tabs.activeService ? META[tabs.activeService.type].color : DEFAULT_SEED))
+const seed = computed(() =>
+  ui.dynamicColor && tabs.activeService ? META[tabs.activeService.type].color : ui.seedColor,
+)
 watchEffect(() => applyTheme(seed.value, ui.isDark))
+
+// Idioma: atualiza o atributo lang e rebusca os dados (os textos dos cards vêm dos adapters)
+watch(locale, (l) => {
+  document.documentElement.lang = l
+  snaps.refreshAll()
+}, { immediate: true })
 
 onMounted(async () => {
   await ui.load()
@@ -35,6 +44,8 @@ function onKey(e: KeyboardEvent) {
   if (mod && e.key.toLowerCase() === 't') { e.preventDefault(); tabs.openNewTab() }
   else if (mod && e.key.toLowerCase() === 'w') { e.preventDefault(); tabs.close(tabs.activeId) }
   else if (mod && e.key.toLowerCase() === 'b' && tabs.activeService) { e.preventDefault(); tabs.togglePanel() }
+  else if (mod && (e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'k')) { e.preventDefault(); ui.focusOmnibox() }
+  else if (mod && e.key === ',') { e.preventDefault(); tabs.openSettings() }
   else if (e.altKey && e.key === 'ArrowLeft') tabs.back()
   else if (e.altKey && e.key === 'ArrowRight') tabs.forward()
 }

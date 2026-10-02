@@ -1,5 +1,6 @@
 import { getJson, request } from '../lib/http'
-import { fmtAgo, fmtDecimal } from '../lib/format'
+import { fmtAgo, fmtDateTime, fmtDecimal } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { ServiceAdapter, ServiceConfig } from './types'
 
 const mbps = (r: any, key: 'download' | 'upload') => {
@@ -25,17 +26,17 @@ export const speedtest = (c: ServiceConfig): ServiceAdapter => {
       return {
         health: 'ok',
         stats: [
-          { label: 'Download (Mbps)', value: show(mbps(r, 'download')), icon: 'download', tone: 'primary' },
-          { label: 'Upload (Mbps)', value: show(mbps(r, 'upload')), icon: 'upload', tone: 'secondary' },
-          { label: 'Ping (ms)', value: r.ping != null ? fmtDecimal(Number(r.ping), 1) : '-', icon: 'network_ping', tone: 'tertiary' },
-          { label: 'Último teste', value: r.created_at ? fmtAgo(r.created_at) : '-', icon: 'schedule', tone: 'neutral' },
+          { label: t('st.download'), value: show(mbps(r, 'download')), icon: 'download', tone: 'primary' },
+          { label: t('st.upload'), value: show(mbps(r, 'upload')), icon: 'upload', tone: 'secondary' },
+          { label: t('st.ping'), value: r.ping != null ? fmtDecimal(Number(r.ping), 1) : '-', icon: 'network_ping', tone: 'tertiary' },
+          { label: t('st.last'), value: r.created_at ? fmtAgo(r.created_at) : '-', icon: 'schedule', tone: 'neutral' },
         ],
-        itemsTitle: 'Últimos testes',
-        emptyText: 'Nenhum teste registrado ainda.',
+        itemsTitle: t('st.recent'),
+        emptyText: t('st.empty'),
         items: rows.map((x) => ({
           id: String(x.id),
-          title: `Download ${show(mbps(x, 'download'))} / Upload ${show(mbps(x, 'upload'))} Mbps`,
-          subtitle: new Date(x.created_at).toLocaleString('pt-BR'),
+          title: t('st.itemTitle', { down: show(mbps(x, 'download')), up: show(mbps(x, 'upload')) }),
+          subtitle: fmtDateTime(x.created_at),
           trailing: x.ping != null ? `${fmtDecimal(Number(x.ping), 0)} ms` : undefined,
           status: x.status === 'failed' ? 'down' : 'up',
         })),
@@ -44,11 +45,11 @@ export const speedtest = (c: ServiceConfig): ServiceAdapter => {
     actions: [
       {
         id: 'run',
-        label: 'Rodar teste agora',
+        label: t('st.run'),
         icon: 'play_arrow',
         run: async () => {
           await request(c, '/api/v1/speedtests/run', { method: 'POST', headers })
-          return 'Teste iniciado. Os resultados aparecem em alguns minutos.'
+          return t('st.started')
         },
       },
     ],

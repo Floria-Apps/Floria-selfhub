@@ -1,5 +1,6 @@
 import { getJson } from '../lib/http'
 import { fmtDecimal } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { DetailItem, ItemStatus, ServiceAdapter, ServiceConfig } from './types'
 
 // O Uptime Kuma não tem API REST oficial. Usamos a página de status pública,
@@ -8,8 +9,7 @@ const STATUS: Record<number, ItemStatus> = { 0: 'down', 1: 'up', 2: 'warn', 3: '
 
 export const kuma = (c: ServiceConfig): ServiceAdapter => ({
   async snapshot() {
-    if (!c.slug)
-      throw new Error('Informe o identificador da página de status (slug) nas configurações do serviço.')
+    if (!c.slug) throw new Error(t('kuma.noSlug'))
 
     const [page, beats] = await Promise.all([
       getJson(c, `/api/status-page/${encodeURIComponent(c.slug)}`),
@@ -42,13 +42,13 @@ export const kuma = (c: ServiceConfig): ServiceAdapter => ({
     return {
       health: down > 0 ? 'warn' : 'ok',
       stats: [
-        { label: 'Monitores', value: String(items.length), icon: 'monitor_heart', tone: 'primary' },
-        { label: 'No ar', value: String(up), icon: 'check_circle', tone: 'secondary' },
-        { label: 'Fora do ar', value: String(down), icon: 'error', tone: down > 0 ? 'tertiary' : 'neutral' },
-        { label: 'Disponibilidade 24 h', value: avg == null ? '-' : `${fmtDecimal(avg)}%`, icon: 'schedule', tone: 'neutral' },
+        { label: t('kuma.monitors'), value: String(items.length), icon: 'monitor_heart', tone: 'primary' },
+        { label: t('kuma.up'), value: String(up), icon: 'check_circle', tone: 'secondary' },
+        { label: t('kuma.down'), value: String(down), icon: 'error', tone: down > 0 ? 'tertiary' : 'neutral' },
+        { label: t('kuma.uptime'), value: avg == null ? '-' : `${fmtDecimal(avg)}%`, icon: 'schedule', tone: 'neutral' },
       ],
-      itemsTitle: 'Monitores',
-      emptyText: 'Essa página de status não tem monitores.',
+      itemsTitle: t('kuma.monitors'),
+      emptyText: t('kuma.empty'),
       items,
     }
   },

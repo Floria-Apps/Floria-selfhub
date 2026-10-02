@@ -9,6 +9,9 @@ export interface Tab {
   serviceId: string | null
 }
 
+/** Marcador usado no lugar do id de um serviço para a aba de configurações */
+export const SETTINGS_ID = '__settings__'
+
 const newId = () => crypto.randomUUID()
 
 export const useTabs = defineStore('tabs', () => {
@@ -24,6 +27,7 @@ export const useTabs = defineStore('tabs', () => {
 
   const active = computed(() => tabs.value.find((t) => t.id === activeId.value))
   const activeService = computed(() => services.get(active.value?.serviceId))
+  const isSettings = computed(() => active.value?.serviceId === SETTINGS_ID)
   const canBack = computed(() => navIndex.value > 0)
   const canForward = computed(() => navIndex.value < nav.value.length - 1)
 
@@ -65,6 +69,18 @@ export const useTabs = defineStore('tabs', () => {
     activate(tab.id)
   }
 
+  function openSettings() {
+    const existing = tabs.value.find((t) => t.serviceId === SETTINGS_ID)
+    if (existing) return activate(existing.id)
+    if (active.value && active.value.serviceId === null) {
+      active.value.serviceId = SETTINGS_ID
+      return
+    }
+    const tab = { id: newId(), serviceId: SETTINGS_ID }
+    tabs.value.push(tab)
+    activate(tab.id)
+  }
+
   function close(id: string) {
     const i = tabs.value.findIndex((t) => t.id === id)
     if (i < 0) return
@@ -98,7 +114,7 @@ export const useTabs = defineStore('tabs', () => {
   async function restore() {
     const saved = await getItem<{ serviceIds: (string | null)[]; active: number } | null>('tabs', null)
     if (saved?.serviceIds?.length) {
-      const valid = saved.serviceIds.filter((id) => id === null || services.get(id))
+      const valid = saved.serviceIds.filter((id) => id === null || id === SETTINGS_ID || services.get(id))
       if (valid.length) {
         tabs.value = valid.map((serviceId) => ({ id: newId(), serviceId }))
         const idx = Math.min(saved.active ?? 0, tabs.value.length - 1)
@@ -119,7 +135,7 @@ export const useTabs = defineStore('tabs', () => {
   }
 
   return {
-    tabs, activeId, active, activeService, panelOpen, canBack, canForward,
-    activate, back, forward, openNewTab, openService, close, closeForService, togglePanel, restore,
+    tabs, activeId, active, activeService, isSettings, panelOpen, canBack, canForward,
+    activate, back, forward, openNewTab, openService, openSettings, close, closeForService, togglePanel, restore,
   }
 })

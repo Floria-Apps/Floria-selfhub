@@ -1,6 +1,7 @@
 import { md5 } from 'js-md5'
 import { getJson } from '../lib/http'
 import { fmtNumber } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { ServiceAdapter, ServiceConfig } from './types'
 
 export const navidrome = (c: ServiceConfig): ServiceAdapter => {
@@ -16,8 +17,8 @@ export const navidrome = (c: ServiceConfig): ServiceAdapter => {
     if (!res || res.status !== 'ok') {
       throw new Error(
         res?.error?.code === 40
-          ? 'Usuário ou senha incorretos.'
-          : `O Navidrome recusou o pedido: ${res?.error?.message ?? 'resposta inválida'}.`,
+          ? t('nd.badLogin')
+          : t('nd.refused', { msg: res?.error?.message ?? t('nd.invalid') }),
       )
     }
     return res
@@ -36,13 +37,13 @@ export const navidrome = (c: ServiceConfig): ServiceAdapter => {
       return {
         health: 'ok',
         stats: [
-          { label: 'Tocando agora', value: String(entries.length), icon: 'headphones', tone: 'primary' },
-          { label: 'Faixas na biblioteca', value: fmtNumber(scan.scanStatus?.count), icon: 'library_music', tone: 'secondary' },
-          { label: 'Varredura', value: scanning ? 'Em andamento' : 'Parada', icon: 'radar', tone: 'tertiary' },
-          { label: 'Versão', value: String(ping.serverVersion ?? ping.version ?? '-'), icon: 'info', tone: 'neutral' },
+          { label: t('nd.playing'), value: String(entries.length), icon: 'headphones', tone: 'primary' },
+          { label: t('nd.tracks'), value: fmtNumber(scan.scanStatus?.count), icon: 'library_music', tone: 'secondary' },
+          { label: t('nd.scan'), value: scanning ? t('nd.scanning') : t('nd.idle'), icon: 'radar', tone: 'tertiary' },
+          { label: t('common.version'), value: String(ping.serverVersion ?? ping.version ?? '-'), icon: 'info', tone: 'neutral' },
         ],
-        itemsTitle: 'Tocando agora',
-        emptyText: 'Nenhuma música tocando no momento.',
+        itemsTitle: t('nd.playing'),
+        emptyText: t('nd.empty'),
         items: entries.map((e, i) => ({
           id: `${e.id ?? i}-${e.username}`,
           title: e.title,
@@ -55,11 +56,11 @@ export const navidrome = (c: ServiceConfig): ServiceAdapter => {
     actions: [
       {
         id: 'scan',
-        label: 'Iniciar varredura',
+        label: t('nd.startScan'),
         icon: 'radar',
         run: async () => {
           await call('startScan')
-          return 'Varredura da biblioteca iniciada.'
+          return t('nd.scanStarted')
         },
       },
     ],

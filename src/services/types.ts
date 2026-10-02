@@ -1,4 +1,4 @@
-export type ServiceType = 'jellyfin' | 'navidrome' | 'kuma' | 'gatus' | 'speedtest'
+export type ServiceType = 'jellyfin' | 'navidrome' | 'kuma' | 'gatus' | 'speedtest' | 'cup' | 'wud' | 'adguard'
 
 export interface ServiceConfig {
   id: string
@@ -70,4 +70,6 @@ export interface ServiceMeta {
   tokenLabel?: string
   tokenHint?: string
   slugHint?: string
+  /** Usuário e senha são opcionais (serviço pode estar sem login) */
+  authOptional?: boolean
 }

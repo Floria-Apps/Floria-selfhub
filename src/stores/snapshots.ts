@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { createAdapter } from '../services/registry'
 import type { ServiceAction, ServiceSnapshot } from '../services/types'
 import { useServices } from './services'
@@ -11,8 +11,6 @@ export interface SnapshotState {
   data?: ServiceSnapshot
   updatedAt?: number
 }
-
-const POLL_MS = 30_000
 
 export const useSnapshots = defineStore('snapshots', () => {
   const services = useServices()
@@ -61,14 +59,21 @@ export const useSnapshots = defineStore('snapshots', () => {
     }
   }
 
-  let timer: ReturnType<typeof setInterval> | undefined
+  let pollTimer: ReturnType<typeof setInterval> | undefined
+  function schedule() {
+    clearInterval(pollTimer)
+    const seconds = ui.refreshSeconds
+    if (seconds > 0) {
+      pollTimer = setInterval(() => {
+        if (!document.hidden) refreshAll()
+      }, seconds * 1000)
+    }
+  }
+
   function start() {
     refreshAll()
-    clearInterval(timer)
-    timer = setInterval(() => {
-      now.value = Date.now()
-      if (!document.hidden) refreshAll()
-    }, POLL_MS)
+    schedule()
+    watch(() => ui.refreshSeconds, schedule)
     setInterval(() => (now.value = Date.now()), 10_000)
   }
 

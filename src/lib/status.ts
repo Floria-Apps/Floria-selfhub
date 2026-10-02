@@ -1,4 +1,5 @@
 import type { SnapshotState } from '../stores/snapshots'
+import { t } from './i18n'
 
 export type VisualState = 'loading' | 'ok' | 'warn' | 'bad'
 
@@ -9,12 +10,7 @@ export function visualState(s?: SnapshotState): VisualState {
   return 'loading'
 }
 
-export const STATE_LABEL: Record<VisualState, string> = {
-  loading: 'Verificando',
-  ok: 'No ar',
-  warn: 'Atenção',
-  bad: 'Sem resposta',
-}
+export const stateLabel = (s: VisualState) => t(`state.${s}`)
 
 /** Mistura a cor do serviço com transparente */
 export const tint = (color: string, pct: number) =>
