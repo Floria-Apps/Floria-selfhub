@@ -1,12 +1,11 @@
 version: 2
+
 updates:
-  # Monitoriza dependências do Node.js (package.json na raiz)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
 
-  # Monitoriza dependências do Rust (Cargo.toml em src-tauri)
   - package-ecosystem: "cargo"
     directory: "/src-tauri"
     schedule:
