@@ -33,6 +33,7 @@ export const useTabs = defineStore('tabs', () => {
 
   function activate(id: string) {
     if (id === activeId.value) return
+
     nav.value = [...nav.value.slice(0, navIndex.value + 1), id]
     navIndex.value = nav.value.length - 1
     activeId.value = id
@@ -40,102 +41,229 @@ export const useTabs = defineStore('tabs', () => {
 
   function back() {
     if (!canBack.value) return
+
     navIndex.value--
     activeId.value = nav.value[navIndex.value]
   }
 
   function forward() {
     if (!canForward.value) return
+
     navIndex.value++
     activeId.value = nav.value[navIndex.value]
   }
 
   function openNewTab() {
-    const tab = { id: newId(), serviceId: null }
+    const tab = {
+      id: newId(),
+      serviceId: null,
+    }
+
     tabs.value.push(tab)
     activate(tab.id)
   }
 
   function openService(serviceId: string) {
-    const existing = tabs.value.find((t) => t.serviceId === serviceId)
+    const existing = tabs.value.find(
+      (t) => t.serviceId === serviceId,
+    )
+
     if (existing) return activate(existing.id)
-    // Se a aba atual é uma página inicial vazia, ela vira o serviço (como um navegador)
+
+    // Se a aba atual é uma página inicial vazia,
+    // ela vira o serviço (como um navegador)
     if (active.value && active.value.serviceId === null) {
       active.value.serviceId = serviceId
       return
     }
-    const tab = { id: newId(), serviceId }
+
+    const tab = {
+      id: newId(),
+      serviceId,
+    }
+
     tabs.value.push(tab)
     activate(tab.id)
   }
 
   function openSettings() {
-    const existing = tabs.value.find((t) => t.serviceId === SETTINGS_ID)
+    const existing = tabs.value.find(
+      (t) => t.serviceId === SETTINGS_ID,
+    )
+
     if (existing) return activate(existing.id)
+
     if (active.value && active.value.serviceId === null) {
       active.value.serviceId = SETTINGS_ID
       return
     }
-    const tab = { id: newId(), serviceId: SETTINGS_ID }
+
+    const tab = {
+      id: newId(),
+      serviceId: SETTINGS_ID,
+    }
+
     tabs.value.push(tab)
     activate(tab.id)
   }
 
+  function moveUp(id: string) {
+    const index = tabs.value.findIndex(
+      (tab) => tab.id === id,
+    )
+
+    if (index <= 0) return
+
+    const [tab] = tabs.value.splice(index, 1)
+
+    if (!tab) return
+
+    tabs.value.splice(index - 1, 0, tab)
+  }
+
+  function moveDown(id: string) {
+    const index = tabs.value.findIndex(
+      (tab) => tab.id === id,
+    )
+
+    if (index < 0 || index >= tabs.value.length - 1) {
+      return
+    }
+
+    const [tab] = tabs.value.splice(index, 1)
+
+    if (!tab) return
+
+    tabs.value.splice(index + 1, 0, tab)
+  }
+
   function close(id: string) {
-    const i = tabs.value.findIndex((t) => t.id === id)
+    const i = tabs.value.findIndex(
+      (t) => t.id === id,
+    )
+
     if (i < 0) return
+
     tabs.value.splice(i, 1)
     nav.value = nav.value.filter((x) => x !== id)
 
     if (tabs.value.length === 0) {
-      const tab = { id: newId(), serviceId: null }
+      const tab = {
+        id: newId(),
+        serviceId: null,
+      }
+
       tabs.value.push(tab)
       nav.value = [tab.id]
       navIndex.value = 0
       activeId.value = tab.id
+
       return
     }
-    if (nav.value.length === 0) nav.value = [tabs.value[0].id]
-    navIndex.value = Math.min(navIndex.value, nav.value.length - 1)
+
+    if (nav.value.length === 0) {
+      nav.value = [tabs.value[0].id]
+    }
+
+    navIndex.value = Math.min(
+      navIndex.value,
+      nav.value.length - 1,
+    )
+
     if (activeId.value === id) {
-      activeId.value = tabs.value[Math.max(0, i - 1)].id
-      nav.value = [...nav.value.slice(0, navIndex.value + 1), activeId.value]
+      activeId.value =
+        tabs.value[Math.max(0, i - 1)].id
+
+      nav.value = [
+        ...nav.value.slice(0, navIndex.value + 1),
+        activeId.value,
+      ]
+
       navIndex.value = nav.value.length - 1
     }
   }
 
   function closeForService(serviceId: string) {
-    tabs.value.filter((t) => t.serviceId === serviceId).forEach((t) => close(t.id))
+    tabs.value
+      .filter((t) => t.serviceId === serviceId)
+      .forEach((t) => close(t.id))
   }
 
-  const togglePanel = () => (panelOpen.value = !panelOpen.value)
+  const togglePanel = () => {
+    panelOpen.value = !panelOpen.value
+  }
 
   // Restaura as abas abertas da última sessão
   async function restore() {
-    const saved = await getItem<{ serviceIds: (string | null)[]; active: number } | null>('tabs', null)
+    const saved = await getItem<{
+      serviceIds: (string | null)[]
+      active: number
+    } | null>('tabs', null)
+
     if (saved?.serviceIds?.length) {
-      const valid = saved.serviceIds.filter((id) => id === null || id === SETTINGS_ID || services.get(id))
+      const valid = saved.serviceIds.filter(
+        (id) =>
+          id === null ||
+          id === SETTINGS_ID ||
+          services.get(id),
+      )
+
       if (valid.length) {
-        tabs.value = valid.map((serviceId) => ({ id: newId(), serviceId }))
-        const idx = Math.min(saved.active ?? 0, tabs.value.length - 1)
+        tabs.value = valid.map((serviceId) => ({
+          id: newId(),
+          serviceId,
+        }))
+
+        const idx = Math.min(
+          saved.active ?? 0,
+          tabs.value.length - 1,
+        )
+
         activeId.value = tabs.value[idx].id
         nav.value = [activeId.value]
         navIndex.value = 0
       }
     }
+
     watch(
       [tabs, activeId],
       () =>
         setItem('tabs', {
-          serviceIds: tabs.value.map((t) => t.serviceId),
-          active: Math.max(0, tabs.value.findIndex((t) => t.id === activeId.value)),
+          serviceIds: tabs.value.map(
+            (t) => t.serviceId,
+          ),
+          active: Math.max(
+            0,
+            tabs.value.findIndex(
+              (t) => t.id === activeId.value,
+            ),
+          ),
         }),
       { deep: true },
     )
   }
 
   return {
-    tabs, activeId, active, activeService, isSettings, panelOpen, canBack, canForward,
-    activate, back, forward, openNewTab, openService, openSettings, close, closeForService, togglePanel, restore,
+    tabs,
+    activeId,
+    active,
+    activeService,
+    isSettings,
+    panelOpen,
+    canBack,
+    canForward,
+
+    activate,
+    back,
+    forward,
+    moveUp,
+    moveDown,
+    openNewTab,
+    openService,
+    openSettings,
+    close,
+    closeForService,
+    togglePanel,
+    restore,
   }
 })
