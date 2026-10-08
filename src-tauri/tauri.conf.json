@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SelfHub",
+  "productName": "Floria SelfHub",
   "version": "0.1.0",
   "identifier": "dev.selfhub.app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "SelfHub",
+        "title": "Floria SelfHub",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
