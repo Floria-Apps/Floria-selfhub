@@ -27,7 +27,7 @@
     "@types/node": "^26.6.3",
     "@vitejs/plugin-vue": "^6.0.9",
     "tailwindcss": "^4.0.0",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vite": "^8.3.4",
     "vue-tsc": "^3.3.12"
   }
