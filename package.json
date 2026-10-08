@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "@fontsource-variable/roboto-flex": "^5.1.0",
-    "@material/material-color-utilities": "^0.3.0",
+    "@material/material-color-utilities": "^0.4.0",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-http": "^2.0.0",
     "@tauri-apps/plugin-opener": "^2.0.0",
     "@tauri-apps/plugin-store": "^2.0.0",
-    "js-md5": "^0.8.3",
-    "material-symbols": "^0.28.0",
+    "js-md5": "^0.9.2",
+    "material-symbols": "^0.47.6",
     "pinia": "^2.2.0",
     "vue": "^3.5.0"
   },
