@@ -1,5 +1,39 @@
-node_modules
-dist
-src-tauri/target
-src-tauri/gen/schemas
+# Dependencies
+node_modules/
+
+# Frontend build
+dist/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE / editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+
+# Local tooling
+.tauri/
+
+# Temporary files
+*.tmp
+*.temp
