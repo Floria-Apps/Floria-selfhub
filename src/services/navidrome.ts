@@ -31,7 +31,20 @@ export const navidrome = (c: ServiceConfig): ServiceAdapter => {
         call('getNowPlaying'),
         call('getScanStatus'),
       ])
-      const entries: any[] = now.nowPlaying?.entry ?? []
+      const rawEntries = now.nowPlaying?.entry
+
+      const entries: any[] =
+        rawEntries == null
+          ? []
+          : Array.isArray(rawEntries)
+            ? rawEntries
+            : [rawEntries]
+
+      const coverUrl = (coverArt?: string) => {
+        if (!coverArt) return undefined
+
+        return `${c.baseUrl.replace(/\/+$/, '')}/rest/getCoverArt.view?id=${encodeURIComponent(coverArt)}&${auth()}&size=160`
+      }
       const scanning = !!scan.scanStatus?.scanning
 
       return {
@@ -50,6 +63,9 @@ export const navidrome = (c: ServiceConfig): ServiceAdapter => {
           subtitle: `${e.artist} - ${e.album}`,
           trailing: e.username,
           status: 'up',
+          imageUrl: coverUrl(e.coverArt),
+          favorite: Boolean(e.starred),
+          rating: Math.max(0, Math.min(5, Number(e.userRating) || 0)),
         })),
       }
     },

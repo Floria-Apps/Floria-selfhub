@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { useTabs } from '../stores/tabs'
 import HomeView from './HomeView.vue'
@@ -11,9 +12,17 @@ const tabs = useTabs()
   <section
     class="min-h-0 flex-1 overflow-y-auto rounded-[28px] bg-surface p-8 transition-colors duration-500"
     role="tabpanel"
+    :aria-labelledby="`tab-${tabs.activeId}`"
+    tabindex="0"
   >
-    <ServiceView v-if="tabs.activeService" :key="tabs.activeService.id" :service="tabs.activeService" />
+    <ServiceView
+      v-if="tabs.activeService"
+      :key="tabs.activeService.id"
+      :service="tabs.activeService"
+    />
+
     <SettingsView v-else-if="tabs.isSettings" />
+
     <HomeView v-else />
   </section>
 </template>

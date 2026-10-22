@@ -10,6 +10,7 @@ import { stateLabel, tintOn, visualState } from '../lib/status'
 import { t } from '../lib/i18n'
 import StatCard from './StatCard.vue'
 import StatusDot from './StatusDot.vue'
+import AppButton from './AppButton.vue'
 
 const props = defineProps<{ service: ServiceConfig }>()
 const snaps = useSnapshots()
@@ -55,18 +56,18 @@ watch(
     </header>
 
     <div v-if="actions.length" class="mt-6 flex flex-wrap gap-2">
-      <button
-        v-for="a in actions"
-        :key="a.id"
-        :disabled="snaps.busyActions[`${service.id}:${a.id}`]"
-        class="flex h-10 items-center gap-2 rounded-full bg-secondary-container px-5 text-sm font-medium text-on-secondary-container transition hover:shadow-sm active:scale-95 disabled:opacity-60"
-        @click="snaps.runAction(service.id, a)"
-      >
-        <span aria-hidden="true" class="material-symbols-rounded text-[20px]" :class="{ spin: snaps.busyActions[`${service.id}:${a.id}`] }">
-          {{ snaps.busyActions[`${service.id}:${a.id}`] ? 'progress_activity' : a.icon }}
-        </span>
-        {{ a.label }}
-      </button>
+
+        <AppButton
+          v-for="a in actions"
+          :key="a.id"
+          variant="tonal"
+          :icon="a.icon"
+          :loading="!!snaps.busyActions[`${service.id}:${a.id}`]"
+          @click="snaps.runAction(service.id, a)"
+        >
+          {{ a.label }}
+        </AppButton>
+
     </div>
 
     <!-- Erro -->
@@ -81,15 +82,22 @@ watch(
         <p class="text-sm opacity-90">{{ state.error }}</p>
         <p v-if="state.data" class="mt-1 text-xs opacity-80">{{ t('sv.stale') }}</p>
       </div>
-      <div class="flex gap-2">
-        <button
-          class="rounded-full px-4 py-2 text-sm font-medium transition hover:bg-black/10 active:scale-95"
+      <div class="flex flex-wrap gap-2">
+        <AppButton
+          variant="text"
+          icon="edit"
           @click="ui.openModal(service.id)"
-        >{{ t('service.edit') }}</button>
-        <button
-          class="rounded-full bg-on-error-container px-4 py-2 text-sm font-medium text-error-container transition active:scale-95"
+        >
+          {{ t('service.edit') }}
+        </AppButton>
+
+        <AppButton
+          variant="tonal"
+          icon="refresh"
           @click="snaps.refresh(service.id)"
-        >{{ t('sv.retry') }}</button>
+        >
+          {{ t('sv.retry') }}
+        </AppButton>
       </div>
     </div>
 

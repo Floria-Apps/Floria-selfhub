@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { META, SERVICE_TYPES, createAdapter } from '../services/registry'
@@ -8,6 +9,7 @@ import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { tintOn } from '../lib/status'
 import { t } from '../lib/i18n'
+import AppButton from './AppButton.vue'
 
 const ui = useUi()
 const services = useServices()
@@ -15,8 +17,16 @@ const tabs = useTabs()
 const snaps = useSnapshots()
 
 type Form = Omit<ServiceConfig, 'id'>
+
 const blank = (): Form => ({
-  type: 'jellyfin', name: '', baseUrl: '', token: '', username: '', password: '', slug: '', insecure: false,
+  type: 'jellyfin',
+  name: '',
+  baseUrl: '',
+  token: '',
+  username: '',
+  password: '',
+  slug: '',
+  insecure: false,
 })
 
 const form = reactive<Form>(blank())
@@ -27,84 +37,204 @@ const testResult = ref<{ ok: boolean; text: string } | null>(null)
 const nameInput = ref<HTMLInputElement>()
 const reveal = ref(false)
 
-const editing = computed(() => (ui.editingId ? services.get(ui.editingId) : undefined))
+const pendingToast = ref<{
+  text: string
+  kind: 'ok' | 'error'
+} | null>(null)
+
+const editing = computed(() =>
+  ui.editingId ? services.get(ui.editingId) : undefined,
+)
+
 const meta = computed(() => META[form.type])
 
 watch(
   () => ui.modalOpen,
   async (open) => {
     if (!open) return
+
     formError.value = ''
     testResult.value = null
     reveal.value = false
-    Object.assign(form, editing.value ? { ...blank(), ...editing.value } : blank())
+
+    Object.assign(
+      form,
+      editing.value ? { ...blank(), ...editing.value } : blank(),
+    )
+
     nameTouched.value = !!editing.value
-    if (!editing.value) form.name = META[form.type].label
+
+    if (!editing.value) {
+      form.name = META[form.type].label
+    }
+
     await nextTick()
     nameInput.value?.focus()
     nameInput.value?.select()
   },
+  { flush: 'post' },
 )
 
-function chooseType(t: ServiceType) {
-  form.type = t
+function chooseType(type: ServiceType) {
+  form.type = type
   testResult.value = null
-  if (!nameTouched.value) form.name = META[t].label
+
+  if (!nameTouched.value) {
+    form.name = META[type].label
+  }
+}
+
+function handleInsecureChange(event: Event) {
+  const checkbox = event.currentTarget as HTMLElement & {
+    checked: boolean
+  }
+
+  form.insecure = checkbox.checked
+}
+
+function closeDialog() {
+  ui.closeModal()
+}
+
+function handleDialogClosed() {
+  if (ui.modalOpen) {
+    ui.closeModal()
+  }
+
+  const notification = pendingToast.value
+
+  if (!notification) return
+
+  pendingToast.value = null
+
+  ui.showToast(notification.text, notification.kind)
 }
 
 function normalize(): Form {
   const name = form.name.trim()
-  if (!name) throw new Error(t('modal.err.name'))
+
+  if (!name) {
+    throw new Error(t('modal.err.name'))
+  }
+
   let url = form.baseUrl.trim()
-  if (!url) throw new Error(t('modal.err.url'))
-  if (!/^https?:\/\//i.test(url)) url = `http://${url}`
+
+  if (!url) {
+    throw new Error(t('modal.err.url'))
+  }
+
+  if (!/^https?:\/\//i.test(url)) {
+    url = `http://${url}`
+  }
+
   try {
     new URL(url)
   } catch {
     throw new Error(t('modal.err.badUrl'))
   }
-  const f = meta.value.fields
-  const out: Form = { type: form.type, name, baseUrl: url.replace(/\/+$/, ''), insecure: form.insecure }
-  if (f.includes('token')) {
-    if (!form.token?.trim()) throw new Error(t('modal.err.required', { field: t(meta.value.tokenLabel ?? 'meta.jellyfin.tokenLabel') }))
+
+  const fields = meta.value.fields
+
+  const out: Form = {
+    type: form.type,
+    name,
+    baseUrl: url.replace(/\/+$/, ''),
+    insecure: form.insecure,
+  }
+
+  if (fields.includes('token')) {
+    if (!form.token?.trim()) {
+      throw new Error(
+        t('modal.err.required', {
+          field: t(
+            meta.value.tokenLabel ?? 'meta.jellyfin.tokenLabel',
+          ),
+        }),
+      )
+    }
+
     out.token = form.token.trim()
   }
-  if (f.includes('username')) {
-    if (!form.username?.trim() && !meta.value.authOptional)
-      throw new Error(t('modal.err.required', { field: t('modal.user') }))
+
+  if (fields.includes('username')) {
+    if (!form.username?.trim() && !meta.value.authOptional) {
+      throw new Error(
+        t('modal.err.required', {
+          field: t('modal.user'),
+        }),
+      )
+    }
+
     out.username = form.username?.trim() || undefined
   }
-  if (f.includes('password')) {
-    if (!form.password && !meta.value.authOptional)
-      throw new Error(t('modal.err.required', { field: t('modal.pass') }))
+
+  if (fields.includes('password')) {
+    if (!form.password && !meta.value.authOptional) {
+      throw new Error(
+        t('modal.err.required', {
+          field: t('modal.pass'),
+        }),
+      )
+    }
+
     out.password = form.password || undefined
   }
-  if (f.includes('slug')) {
-    // Aceita "server", "/status/server" ou a URL completa (inclusive /api/status-page/server)
-    const raw = (form.slug ?? '').trim().replace(/[?#].*$/, '').replace(/\/+$/, '')
+
+  if (fields.includes('slug')) {
+    // Aceita "server", "/status/server" ou uma URL completa.
+    const raw = (form.slug ?? '')
+      .trim()
+      .replace(/[?#].*$/, '')
+      .replace(/\/+$/, '')
+
     const slug = raw.split('/').pop() ?? ''
-    if (!slug) throw new Error(t('modal.err.required', { field: t('modal.slug') }))
+
+    if (!slug) {
+      throw new Error(
+        t('modal.err.required', {
+          field: t('modal.slug'),
+        }),
+      )
+    }
+
     out.slug = slug
   }
+
   return out
 }
 
 async function test() {
   formError.value = ''
   testResult.value = null
+
   let data: Form
+
   try {
     data = normalize()
   } catch (e) {
     formError.value = (e as Error).message
     return
   }
+
   testing.value = true
+
   try {
-    const snap = await createAdapter({ ...data, id: 'test' }).snapshot()
-    testResult.value = { ok: true, text: t('modal.tested', { n: snap.stats.length }) }
+    const snap = await createAdapter({
+      ...data,
+      id: 'test',
+    }).snapshot()
+
+    testResult.value = {
+      ok: true,
+      text: t('modal.tested', {
+        n: snap.stats.length,
+      }),
+    }
   } catch (e) {
-    testResult.value = { ok: false, text: (e as Error).message }
+    testResult.value = {
+      ok: false,
+      text: (e as Error).message,
+    }
   } finally {
     testing.value = false
   }
@@ -112,172 +242,341 @@ async function test() {
 
 function save() {
   formError.value = ''
+
   let data: Form
+
   try {
     data = normalize()
   } catch (e) {
     formError.value = (e as Error).message
     return
   }
+
   if (editing.value) {
     services.update(editing.value.id, data)
     snaps.refresh(editing.value.id)
-    ui.showToast(t('modal.saved'))
+
+    pendingToast.value = {
+      text: t('modal.saved'),
+      kind: 'ok',
+    }
   } else {
     const created = services.add(data)
+
     tabs.openService(created.id)
     snaps.refresh(created.id)
-    ui.showToast(t('modal.added', { name: created.name }))
+
+    pendingToast.value = {
+      text: t('modal.added', {
+        name: created.name,
+      }),
+      kind: 'ok',
+    }
   }
+
+  // A notificação só será mostrada após o evento @closed.
   ui.closeModal()
 }
-
-const field =
-  'w-full rounded-2xl bg-surface-highest px-4 py-3 text-sm text-on-surface outline-none placeholder:text-on-surface-variant/70 focus:ring-2 focus:ring-primary'
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="fade">
-      <div
-        v-if="ui.modalOpen"
-        class="fixed inset-0 z-40 grid place-items-center bg-black/45 p-4"
-        @mousedown.self="ui.closeModal()"
-        @keydown.esc="ui.closeModal()"
+<m3e-dialog
+    ref="dialogRef"
+    :open="ui.modalOpen"
+    dismissible
+    :close-label="t('modal.cancel')"
+    aria-labelledby="service-modal-title"
+    style="
+      --m3e-dialog-max-width: min(42rem, calc(100vw - 2rem));
+      --m3e-dialog-max-height: calc(100dvh - 2rem);
+      --m3e-dialog-container-color: var(--md-surface-high);
+      --m3e-dialog-color: var(--md-on-surface);
+    "
+    @cancel="closeDialog"
+    @closed="handleDialogClosed"
+  >
+    <h2
+      id="service-modal-title"
+      slot="header"
+      class="text-xl font-semibold tracking-tight"
+    >
+      {{ editing ? t('modal.titleEdit') : t('modal.titleAdd') }}
+    </h2>
+
+    <form
+      id="service-modal-form"
+      class="flex max-h-[calc(100dvh-14rem)] w-full min-w-0 flex-col gap-4 overflow-y-auto px-1 py-1"
+      novalidate
+      @submit.prevent="save"
+    >
+      <!-- Tipo de serviço -->
+      <fieldset
+        v-if="!editing"
+        class="grid grid-cols-1 gap-2 sm:grid-cols-2"
       >
-        <form
-          class="flex max-h-full w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-[28px] bg-surface-high p-6 text-on-surface shadow-xl"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-          @submit.prevent="save"
+        <legend class="mb-2 text-sm font-medium">
+          {{ t('modal.type') }}
+        </legend>
+
+        <m3e-button
+          v-for="type in SERVICE_TYPES"
+          :key="type"
+          type="button"
+          :variant="form.type === type ? 'tonal' : 'outlined'"
+          :aria-pressed="form.type === type"
+          class="w-full"
+          @click="chooseType(type)"
         >
-          <h2 id="modal-title" class="text-2xl font-semibold tracking-tight">
-            {{ editing ? t('modal.titleEdit') : t('modal.titleAdd') }}
-          </h2>
+          <span
+            slot="icon"
+            aria-hidden="true"
+            class="material-symbols-rounded grid size-8 shrink-0 place-items-center rounded-full text-[18px] leading-none"
+            :style="{
+              background: tintOn(
+                META[type].color,
+                38,
+                'var(--md-surface)',
+              ),
+              color: tintOn(
+                META[type].color,
+                70,
+                'var(--md-on-surface)',
+              ),
+            }"
+          >{{ META[type].icon }}</span>
 
-          <fieldset v-if="!editing" class="grid grid-cols-2 gap-2">
-            <legend class="sr-only">{{ t('modal.type') }}</legend>
-            <button
-              v-for="t in SERVICE_TYPES"
-              :key="t"
-              type="button"
-              :aria-pressed="form.type === t"
-              class="flex items-center gap-2 rounded-2xl px-3 py-2.5 text-left text-sm font-medium transition active:scale-95"
-              :class="form.type === t ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-highest text-on-surface-variant hover:bg-surface-container'"
-              :style="form.type === t ? { boxShadow: `inset 0 0 0 2px ${META[t].color}` } : undefined"
-              @click="chooseType(t)"
-            >
-              <span aria-hidden="true"
-                class="material-symbols-rounded grid size-8 shrink-0 place-items-center rounded-full text-[18px]"
-                :style="{ background: tintOn(META[t].color, 38, 'var(--md-surface)'), color: tintOn(META[t].color, 70, 'var(--md-on-surface)') }"
-              >{{ META[t].icon }}</span>
-              <span class="truncate">{{ META[t].label }}</span>
-            </button>
-          </fieldset>
-          <p v-if="!editing" class="-mt-2 text-sm text-on-surface-variant">{{ t(meta.description) }}</p>
+          <span class="truncate">
+            {{ META[type].label }}
+          </span>
+        </m3e-button>
+      </fieldset>
 
-          <label class="flex flex-col gap-1.5 text-sm font-medium">
-            {{ t('modal.name') }}
-            <input
-              ref="nameInput"
-              v-model="form.name"
-              :class="field"
-              autocomplete="off"
-              @input="nameTouched = true"
-            />
+      <p
+        v-if="!editing"
+        class="-mt-1 text-sm text-on-surface-variant"
+      >
+        {{ t(meta.description) }}
+      </p>
+
+      <!-- Nome -->
+      <m3e-form-field variant="outlined" class="w-full">
+        <label slot="label" for="field-name">
+          {{ t('modal.name') }}
+        </label>
+
+        <input
+          id="field-name"
+          ref="nameInput"
+          v-model="form.name"
+          class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+          autocomplete="off"
+          @input="nameTouched = true"
+        />
+      </m3e-form-field>
+
+      <!-- Endereço -->
+      <m3e-form-field variant="outlined" class="w-full">
+        <label slot="label" for="field-address">
+          {{ t('modal.address') }}
+        </label>
+
+        <input
+          id="field-address"
+          v-model="form.baseUrl"
+          class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+          :type="ui.hideAddresses && !reveal ? 'password' : 'text'"
+          :placeholder="meta.urlPlaceholder"
+          inputmode="url"
+          autocomplete="off"
+          spellcheck="false"
+        />
+
+        <m3e-icon-button
+          v-if="ui.hideAddresses"
+          slot="suffix"
+          type="button"
+          variant="standard"
+          size="small"
+          :aria-label="
+            reveal
+              ? t('modal.hideAddress')
+              : t('modal.showAddress')
+          "
+          :title="
+            reveal
+              ? t('modal.hideAddress')
+              : t('modal.showAddress')
+          "
+          @click="reveal = !reveal"
+        >
+          <span
+            aria-hidden="true"
+            class="material-symbols-rounded text-[20px] leading-none"
+          >{{ reveal ? 'visibility_off' : 'visibility' }}</span>
+        </m3e-icon-button>
+      </m3e-form-field>
+
+      <!-- Token -->
+      <m3e-form-field
+        v-if="meta.fields.includes('token')"
+        variant="outlined"
+        class="w-full"
+      >
+        <label slot="label" for="field-token">
+          {{ t(meta.tokenLabel ?? '') }}
+        </label>
+
+        <input
+          id="field-token"
+          v-model="form.token"
+          class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+          type="password"
+          autocomplete="off"
+        />
+
+        <span v-if="meta.tokenHint" slot="hint">
+          {{ t(meta.tokenHint) }}
+        </span>
+      </m3e-form-field>
+
+      <!-- Usuário e senha -->
+      <div
+        v-if="meta.fields.includes('username')"
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+      >
+        <m3e-form-field variant="outlined" class="w-full">
+          <label slot="label" for="field-username">
+            {{ t('modal.user') }}
           </label>
 
-          <div class="flex flex-col gap-1.5 text-sm font-medium">
-            <label for="field-address">{{ t('modal.address') }}</label>
-            <span class="relative block">
-              <input
-                id="field-address"
-                v-model="form.baseUrl"
-                :class="[field, ui.hideAddresses && 'pr-12']"
-                :type="ui.hideAddresses && !reveal ? 'password' : 'text'"
-                :placeholder="meta.urlPlaceholder"
-                inputmode="url"
-                autocomplete="off"
-                spellcheck="false"
-              />
-              <button
-                v-if="ui.hideAddresses"
-                type="button"
-                class="material-symbols-rounded absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-[20px] text-on-surface-variant transition hover:bg-surface-high"
-                :aria-label="reveal ? t('modal.hideAddress') : t('modal.showAddress')"
-                @click="reveal = !reveal"
-              >{{ reveal ? 'visibility_off' : 'visibility' }}</button>
-            </span>
-          </div>
+          <input
+            id="field-username"
+            v-model="form.username"
+            class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+            autocomplete="off"
+          />
+        </m3e-form-field>
 
-          <label v-if="meta.fields.includes('token')" class="flex flex-col gap-1.5 text-sm font-medium">
-            {{ t(meta.tokenLabel ?? '') }}
-            <input v-model="form.token" :class="field" type="password" autocomplete="off" />
-            <span v-if="meta.tokenHint" class="text-xs font-normal text-on-surface-variant">{{ t(meta.tokenHint) }}</span>
+        <m3e-form-field variant="outlined" class="w-full">
+          <label slot="label" for="field-password">
+            {{ t('modal.pass') }}
           </label>
 
-          <div v-if="meta.fields.includes('username')" class="grid grid-cols-2 gap-3">
-            <label class="flex flex-col gap-1.5 text-sm font-medium">
-              {{ t('modal.user') }}
-              <input v-model="form.username" :class="field" autocomplete="off" />
-            </label>
-            <label class="flex flex-col gap-1.5 text-sm font-medium">
-              {{ t('modal.pass') }}
-              <input v-model="form.password" :class="field" type="password" autocomplete="off" />
-            </label>
-          </div>
-
-          <p v-if="meta.authOptional" class="-mt-3 text-xs text-on-surface-variant">{{ t('modal.authOptional') }}</p>
-
-          <label v-if="meta.fields.includes('slug')" class="flex flex-col gap-1.5 text-sm font-medium">
-            {{ t('modal.slug') }}
-            <input v-model="form.slug" :class="field" placeholder="server" autocomplete="off" spellcheck="false" />
-            <span class="text-xs font-normal text-on-surface-variant">{{ t(meta.slugHint ?? '') }}</span>
-          </label>
-
-          <label class="flex items-center gap-3 text-sm">
-            <input v-model="form.insecure" type="checkbox" class="size-5 accent-primary" />
-            {{ t('modal.insecure') }}
-          </label>
-
-          <p v-if="formError" class="rounded-2xl bg-error-container px-4 py-3 text-sm text-on-error-container" role="alert">
-            {{ formError }}
-          </p>
-          <p
-            v-if="testResult"
-            class="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm"
-            :class="testResult.ok ? 'bg-primary-container text-on-primary-container' : 'bg-error-container text-on-error-container'"
-            role="status"
-          >
-            <span aria-hidden="true" class="material-symbols-rounded text-[20px]">{{ testResult.ok ? 'check_circle' : 'error' }}</span>
-            {{ testResult.text }}
-          </p>
-
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <button
-              type="button"
-              :disabled="testing"
-              class="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/10 active:scale-95 disabled:opacity-60"
-              @click="test"
-            >
-              <span aria-hidden="true" class="material-symbols-rounded text-[20px]" :class="{ spin: testing }">{{ testing ? 'progress_activity' : 'network_check' }}</span>
-              {{ t('modal.test') }}
-            </button>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                class="rounded-full px-5 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-highest active:scale-95"
-                @click="ui.closeModal()"
-              >{{ t('modal.cancel') }}</button>
-              <button
-                type="submit"
-                class="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition hover:shadow-md active:scale-95"
-              >{{ editing ? t('modal.save') : t('modal.add') }}</button>
-            </div>
-          </div>
-        </form>
+          <input
+            id="field-password"
+            v-model="form.password"
+            class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+            type="password"
+            autocomplete="off"
+          />
+        </m3e-form-field>
       </div>
-    </Transition>
-  </Teleport>
+
+      <p
+        v-if="meta.authOptional"
+        class="-mt-2 text-xs text-on-surface-variant"
+      >
+        {{ t('modal.authOptional') }}
+      </p>
+
+      <!-- Slug -->
+      <m3e-form-field
+        v-if="meta.fields.includes('slug')"
+        variant="outlined"
+        class="w-full"
+      >
+        <label slot="label" for="field-slug">
+          {{ t('modal.slug') }}
+        </label>
+
+        <input
+          id="field-slug"
+          v-model="form.slug"
+          class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+          placeholder="server"
+          autocomplete="off"
+          spellcheck="false"
+        />
+
+        <span v-if="meta.slugHint" slot="hint">
+          {{ t(meta.slugHint) }}
+        </span>
+      </m3e-form-field>
+
+      <!-- Certificado HTTPS -->
+      <label class="flex cursor-pointer items-center gap-3 text-sm">
+        <m3e-checkbox
+          :checked="form.insecure"
+          @change="handleInsecureChange"
+        />
+        <span>{{ t('modal.insecure') }}</span>
+      </label>
+
+      <!-- Erro de validação -->
+      <p
+        v-if="formError"
+        class="rounded-2xl bg-error-container px-4 py-3 text-sm text-on-error-container"
+        role="alert"
+      >
+        {{ formError }}
+      </p>
+
+      <!-- Resultado do teste -->
+      <p
+        v-if="testResult"
+        class="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm"
+        :class="
+          testResult.ok
+            ? 'bg-primary-container text-on-primary-container'
+            : 'bg-error-container text-on-error-container'
+        "
+        role="status"
+      >
+        <span
+          aria-hidden="true"
+          class="material-symbols-rounded text-[20px] leading-none"
+        >{{ testResult.ok ? 'check_circle' : 'error' }}</span>
+
+        {{ testResult.text }}
+      </p>
+
+      <!-- Permite submeter com Enter -->
+      <button type="submit" tabindex="-1" aria-hidden="true" class="sr-only">
+        {{ editing ? t('modal.save') : t('modal.add') }}
+      </button>
+    </form>
+
+    <!-- Ações fixadas no rodapé do diálogo -->
+    <div
+      slot="actions"
+      end
+      class="flex w-full flex-wrap items-center justify-between gap-2"
+    >
+      <AppButton
+        variant="text"
+        icon="network_check"
+        :loading="testing"
+        @click="test"
+      >
+        {{ t('modal.test') }}
+      </AppButton>
+
+      <div class="flex flex-wrap justify-end gap-2">
+        <AppButton
+          variant="text"
+          @click="closeDialog"
+        >
+          {{ t('modal.cancel') }}
+        </AppButton>
+
+        <AppButton
+          variant="filled"
+          :icon="editing ? 'save' : 'add'"
+          @click="save"
+        >
+          {{ editing ? t('modal.save') : t('modal.add') }}
+        </AppButton>
+      </div>
+    </div>
+  </m3e-dialog>
 </template>

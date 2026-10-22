@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { VisualState } from '../lib/status'
-defineProps<{ state: VisualState }>()
+
+defineProps<{
+  state: VisualState
+}>()
 </script>
 
 <template>

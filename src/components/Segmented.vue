@@ -1,28 +1,46 @@
+
 <script setup lang="ts" generic="T extends string | number">
 defineProps<{
   options: { value: T; label: string; icon?: string }[]
   modelValue: T
   label: string
 }>()
-defineEmits<{ 'update:modelValue': [value: T] }>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: T]
+}>()
+
+function handleChange(event: Event, value: T) {
+  const segment = event.currentTarget as HTMLElement & {
+    checked: boolean
+  }
+
+  // Só atualiza quando o segmento fica selecionado.
+  if (segment.checked) {
+    emit('update:modelValue', value)
+  }
+}
 </script>
 
 <template>
-  <div role="radiogroup" :aria-label="label" class="inline-flex flex-wrap rounded-full bg-surface-high p-1">
-    <button
+  <m3e-segmented-button
+    :aria-label="label"
+    class="inline-flex flex-wrap"
+  >
+    <m3e-button-segment
       v-for="o in options"
       :key="String(o.value)"
-      type="button"
-      role="radio"
-      :aria-checked="modelValue === o.value"
-      class="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-95"
-      :class="modelValue === o.value
-        ? 'bg-secondary-container text-on-secondary-container shadow-sm'
-        : 'text-on-surface-variant hover:bg-surface-highest'"
-      @click="$emit('update:modelValue', o.value)"
+      :value="String(o.value)"
+      :checked="modelValue === o.value"
+      @change="handleChange($event, o.value)"
     >
-      <span aria-hidden="true" v-if="o.icon" class="material-symbols-rounded text-[18px]">{{ o.icon }}</span>
+      <m3e-icon
+        v-if="o.icon"
+        slot="icon"
+        :name="o.icon"
+        variant="rounded"
+      />
       {{ o.label }}
-    </button>
-  </div>
+    </m3e-button-segment>
+  </m3e-segmented-button>
 </template>

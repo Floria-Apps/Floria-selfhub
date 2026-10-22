@@ -1,17 +1,46 @@
 <script setup lang="ts">
+import { watch } from 'vue'
+import { locale } from '../lib/i18n'
 import { useUi } from '../stores/ui'
+
 const ui = useUi()
+
+interface SnackbarOptions {
+  duration?: number
+  closeLabel?: string
+}
+
+interface M3eSnackbarService {
+  open(
+    message: string,
+    dismissibleOrAction?: boolean | string,
+    options?: SnackbarOptions,
+  ): void
+}
+
+const snackbar = (
+  globalThis as typeof globalThis & {
+    M3eSnackbar?: M3eSnackbarService
+  }
+).M3eSnackbar
+
+watch(
+  () => ui.toast,
+  (toast) => {
+    if (!toast || !snackbar) return
+
+    snackbar.open(toast.text, true, {
+      duration: 4000,
+      closeLabel:
+        locale.value === 'pt-BR'
+          ? 'Fechar notificação'
+          : 'Dismiss notification',
+    })
+  },
+)
 </script>
 
 <template>
-  <Transition name="snack">
-    <div
-      v-if="ui.toast"
-      class="fixed right-0 bottom-6 left-0 z-50 mx-auto flex w-fit max-w-[90vw] items-center gap-3 rounded-2xl bg-inverse-surface px-5 py-3.5 text-sm text-inverse-on-surface shadow-lg"
-      role="status"
-    >
-      <span aria-hidden="true" class="material-symbols-rounded text-[20px]">{{ ui.toast.kind === 'error' ? 'error' : 'check_circle' }}</span>
-      {{ ui.toast.text }}
-    </div>
-  </Transition>
+  <!-- O m3e renderiza as notificações pelo serviço global. -->
+  <span class="hidden" aria-hidden="true" />
 </template>

@@ -34,6 +34,15 @@ export interface DetailItem {
   status?: ItemStatus
   /** 0 a 1 */
   progress?: number
+
+  /** URL da capa do álbum ou da faixa */
+  imageUrl?: string
+
+  /** Indica se a faixa está marcada como favorita */
+  favorite?: boolean
+
+  /** Avaliação do usuário, de 0 a 5 */
+  rating?: number
 }
 
 export interface ServiceSnapshot {

@@ -7,6 +7,8 @@ import { SETTINGS_ID, useTabs } from '../stores/tabs'
 import { tintOn, visualState } from '../lib/status'
 import { t } from '../lib/i18n'
 import StatusDot from './StatusDot.vue'
+import AppButton from './AppButton.vue'
+import AppIconButton from './AppIconButton.vue'
 
 const tabs = useTabs()
 const services = useServices()
@@ -80,19 +82,13 @@ function moveDown(id: string) {
         SelfHub
       </span>
 
-      <button
-        class="material-symbols-rounded grid size-9 shrink-0 place-items-center rounded-full text-[20px] transition hover:bg-surface-highest active:scale-95"
-        :class="
-          editing
-            ? 'bg-secondary-container text-on-secondary-container'
-            : 'text-on-surface-variant'
-        "
-        :aria-label="editing ? 'Concluir edição' : 'Editar abas'"
-        :aria-pressed="editing"
+      <AppIconButton
+        :icon="editing ? 'check' : 'edit'"
+        :label="editing ? 'Concluir edição' : 'Editar abas'"
+        :variant="editing ? 'tonal' : 'standard'"
+        :pressed="editing"
         @click="toggleEditing"
-      >
-        {{ editing ? 'check' : 'edit' }}
-      </button>
+      />
     </div>
 
     <nav
@@ -110,116 +106,100 @@ function moveDown(id: string) {
             : 'text-on-surface-variant hover:bg-surface-high'
         "
       >
-        <button
-          role="tab"
-          :aria-selected="row.id === tabs.activeId"
-          class="flex min-w-0 flex-1 items-center gap-3 rounded-full py-2 text-left text-sm font-medium"
-          :class="editing ? 'pr-1 pl-2' : 'pr-10 pl-2'"
-          @click="tabs.activate(row.id)"
-        >
-          <span
-            aria-hidden="true"
-            class="material-symbols-rounded relative grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
-            :style="
-              row.color
-                ? {
-                    background: tintOn(
-                      row.color,
-                      38,
-                      'var(--md-surface)',
-                    ),
-                    color: tintOn(
-                      row.color,
-                      70,
-                      'var(--md-on-surface)',
-                    ),
-                  }
-                : {
-                    background: 'var(--md-surface-high)',
-                  }
-            "
+
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="row.id === tabs.activeId"
+            class="flex min-w-0 flex-1 items-center gap-3 rounded-full py-2 text-left text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            :class="editing ? 'pr-1 pl-2' : 'pr-10 pl-2'"
+            @click="tabs.activate(row.id)"
           >
-            {{ row.icon }}
+            <span
+              aria-hidden="true"
+              class="material-symbols-rounded relative grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
+              :style="
+                row.color
+                  ? {
+                      background: tintOn(row.color, 38, 'var(--md-surface)'),
+                      color: tintOn(row.color, 70, 'var(--md-on-surface)'),
+                    }
+                  : {
+                      background: 'var(--md-surface-high)',
+                    }
+              "
+            >
+              {{ row.icon }}
 
-            <StatusDot
-              v-if="row.state"
-              :state="row.state"
-              class="absolute -right-0.5 -bottom-0.5 ring-2 ring-surface"
-            />
-          </span>
+              <StatusDot
+                v-if="row.state"
+                :state="row.state"
+                class="absolute -right-0.5 -bottom-0.5 ring-2 ring-surface"
+              />
+            </span>
 
-          <span class="truncate">
-            {{ row.name }}
-          </span>
-        </button>
+            <span class="truncate">
+              {{ row.name }}
+            </span>
+          </button>
 
         <!-- Controles de edição -->
         <div
           v-if="editing"
           class="flex shrink-0 items-center gap-0.5 pr-1"
         >
-          <button
-            class="material-symbols-rounded grid size-7 place-items-center rounded-full text-[18px] transition"
-            :class="
-              row.index === 0
-                ? 'cursor-default opacity-25'
-                : 'hover:bg-surface-highest active:scale-90'
-            "
-            :disabled="row.index === 0"
-            aria-label="Mover para cima"
-            @click.stop="moveUp(row.id)"
-          >
-            keyboard_arrow_up
-          </button>
+            <AppIconButton
+              size="extra-small"
+              icon="keyboard_arrow_up"
+              label="Mover para cima"
+              :disabled="row.index === 0"
+              @click.stop="moveUp(row.id)"
+            />
 
-          <button
-            class="material-symbols-rounded grid size-7 place-items-center rounded-full text-[18px] transition"
-            :class="
-              row.index === rows.length - 1
-                ? 'cursor-default opacity-25'
-                : 'hover:bg-surface-highest active:scale-90'
-            "
-            :disabled="row.index === rows.length - 1"
-            aria-label="Mover para baixo"
-            @click.stop="moveDown(row.id)"
-          >
-            keyboard_arrow_down
-          </button>
+            <AppIconButton
+              size="extra-small"
+              icon="keyboard_arrow_down"
+              label="Mover para baixo"
+              :disabled="row.index === rows.length - 1"
+              @click.stop="moveDown(row.id)"
+            />
         </div>
 
         <!-- Fechar -->
-        <button
+
+        <AppIconButton
           v-else
-          class="material-symbols-rounded absolute right-2 grid size-7 place-items-center rounded-full text-[18px] opacity-0 transition hover:bg-surface-highest focus-visible:opacity-100 group-hover:opacity-100"
-          :aria-label="t('tab.close', { name: row.name })"
+          size="extra-small"
+          icon="close"
+          :label="t('tab.close', { name: row.name })"
+          class="absolute right-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100"
           @click.stop="tabs.close(row.id)"
-        >
-          close
-        </button>
+        />
+
       </div>
     </nav>
 
-    <button
-      class="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-primary-container px-4 py-3.5 text-sm font-semibold text-on-primary-container shadow-sm transition hover:shadow-md active:scale-95"
+
+    <AppButton
+      class="mt-2 w-full"
+      variant="tonal"
+      size="large"
+      icon="add"
       @click="tabs.openNewTab()"
     >
-      <span
-        aria-hidden="true"
-        class="material-symbols-rounded"
-      >
-        add
-      </span>
-
       {{ t('tab.new') }}
-    </button>
+    </AppButton>
+
 
     <button
-      class="mt-1 flex items-center gap-3 rounded-full px-3 py-2 text-sm transition"
+      type="button"
+      class="mt-1 flex w-full items-center gap-3 rounded-full px-3 py-2 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       :class="
         tabs.isSettings
           ? 'bg-secondary-container text-on-secondary-container'
           : 'text-on-surface-variant hover:bg-surface-high'
       "
+      :aria-current="tabs.isSettings ? 'page' : undefined"
       @click="tabs.openSettings()"
     >
       <span
