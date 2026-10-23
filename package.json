@@ -12,7 +12,7 @@
   "dependencies": {
     "@fontsource-variable/roboto-flex": "^5.1.0",
     "@m3e/web": "^2.10.2",
-    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-autostart": "^2.7.0",
     "@tauri-apps/plugin-http": "^2.0.0",
     "@tauri-apps/plugin-notification": "^2.7.0",
