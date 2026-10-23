@@ -29,7 +29,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@tauri-apps/cli": "^2.0.0",
     "@types/node": "^26.6.3",
-    "@vitejs/plugin-vue": "^6.0.9",
+    "@vitejs/plugin-vue": "^6.0.10",
     "tailwindcss": "^4.0.0",
     "typescript": "5.9.3",
     "vite": "^8.3.4",
