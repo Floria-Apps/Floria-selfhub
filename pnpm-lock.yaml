@@ -45,7 +45,7 @@ importers:
         specifier: ^4.0.3
         version: 4.1.0(@vue/devtools-api@8.2.1)(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3))
       vue:
-        specifier: ^3.5.0
+        specifier: ^3.5.44
         version: 3.5.44(typescript@5.9.3)
       vue-i18n:
         specifier: ^11.4.16
