@@ -73,7 +73,7 @@ importers:
         specifier: ^8.3.4
         version: 8.3.4(@types/node@26.6.5)(jiti@2.7.0)
       vue-tsc:
-        specifier: ^3.3.12
+        specifier: ^3.3.13
         version: 3.3.13(typescript@5.9.3)
 
 packages:
