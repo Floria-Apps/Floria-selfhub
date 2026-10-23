@@ -1,7 +1,7 @@
-
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useFullSpin } from '../../lib/useFullSpin'
 
 type ButtonVariant = 'filled' | 'tonal' | 'elevated' | 'outlined' | 'text'
 type ButtonSize = 'extra-small' | 'small' | 'medium' | 'large' | 'extra-large'
@@ -26,6 +26,9 @@ const props = withDefaults(defineProps<{
 
 const { t } = useI18n()
 
+// O ícone gira até completar a volta atual, mesmo que o loading termine antes.
+const { spinning, onIteration } = useFullSpin(toRef(props, 'loading'))
+
 const emit = defineEmits<{
   click: [event: Event]
 }>()
@@ -49,7 +52,10 @@ const dangerStyle = computed<Record<string, string> | undefined>(() => {
   }
 })
 
+// Durante o loading o botão NÃO é desabilitado (isso escurece o botão e tira o foco).
+// O clique é apenas ignorado.
 function handleClick(event: Event) {
+  if (props.loading) return
   emit('click', event)
 }
 </script>
@@ -59,13 +65,26 @@ function handleClick(event: Event) {
     :variant="variant"
     :size="size"
     :type="type"
-    :disabled="disabled || loading"
+    :disabled="disabled"
     :style="dangerStyle"
     :aria-busy="loading ? 'true' : undefined"
     @click="handleClick"
   >
+    <!-- Com ícone: o próprio ícone gira durante o loading, então o botão não muda de tamanho. -->
+    <span
+      v-if="icon"
+      slot="icon"
+      aria-hidden="true"
+      class="inline-flex"
+      :class="{ 'animate-spin': spinning }"
+      @animationiteration="onIteration"
+    >
+      <m3e-icon :name="icon" variant="rounded" />
+    </span>
+
+    <!-- Sem ícone: mantém o indicador original do m3e (aqui o botão cresce, não há o que girar). -->
     <m3e-loading-indicator
-      v-if="loading"
+      v-else-if="loading"
       slot="icon"
       :aria-label="t('common.loading')"
       class="button-loading-indicator"
@@ -75,15 +94,6 @@ function handleClick(event: Event) {
         --m3e-loading-indicator-container-size: 24px;
       "
     />
-
-    <span
-      v-if="icon && !loading"
-      slot="icon"
-      aria-hidden="true"
-      class="inline-flex"
-    >
-      <m3e-icon :name="icon" variant="rounded" />
-    </span>
 
     <slot />
 

@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,13 +17,14 @@ const compact = ref(false)
 let resizeObserver: ResizeObserver | undefined
 
 onMounted(() => {
-  const splitPane = toolbar.value?.closest('m3e-split-pane')
-  if (!splitPane) return
+  const element = toolbar.value
+  if (!element) return
 
   resizeObserver = new ResizeObserver(([entry]) => {
     compact.value = entry.contentRect.width < 720
   })
-  resizeObserver.observe(splitPane)
+
+  resizeObserver.observe(element)
 })
 
 onUnmounted(() => resizeObserver?.disconnect())
@@ -56,6 +56,7 @@ async function openExternal() {
 }
 </script>
 
+
 <template>
   <header
     ref="toolbar"
@@ -65,6 +66,8 @@ async function openExternal() {
   >
     <AppIconButton
       :size="compact ? 'small' : 'medium'"
+      shape="rounded"
+      width="default"
       icon="arrow_back"
       :label="t('nav.back')"
       :disabled="!tabs.canBack"
@@ -73,6 +76,8 @@ async function openExternal() {
 
     <AppIconButton
       :size="compact ? 'small' : 'medium'"
+      shape="rounded"
+      width="default"
       icon="arrow_forward"
       :label="t('nav.forward')"
       :disabled="!tabs.canForward"
@@ -81,21 +86,22 @@ async function openExternal() {
 
     <AppIconButton
       :size="compact ? 'small' : 'medium'"
+      shape="rounded"
+      width="default"
       icon="refresh"
       :label="t('nav.refresh')"
       :loading="refreshing"
       @click="refresh"
     />
 
-    <div
-      class="toolbar-omnibox mx-2 flex min-w-[10rem] justify-center"
-      :class="compact ? 'flex-[0_1_10rem]' : 'flex-1'"
-    >
-      <Omnibox class="w-full max-w-2xl" />
+    <div class="toolbar-omnibox mx-1 flex min-w-0 flex-1 justify-center">
+      <Omnibox class="w-full min-w-0 max-w-none" />
     </div>
 
     <AppIconButton
       :size="compact ? 'small' : 'medium'"
+      shape="rounded"
+      width="default"
       icon="open_in_new"
       :label="t('nav.external')"
       :disabled="!tabs.activeService"
@@ -104,6 +110,8 @@ async function openExternal() {
 
     <AppIconButton
       :size="compact ? 'small' : 'medium'"
+      shape="rounded"
+      width="default"
       icon="right_panel_open"
       :label="t('nav.panel')"
       :variant="tabs.panelOpen && tabs.activeService ? 'tonal' : 'standard'"
@@ -111,6 +119,5 @@ async function openExternal() {
       :disabled="!tabs.activeService"
       @click="tabs.togglePanel()"
     />
-
   </header>
 </template>

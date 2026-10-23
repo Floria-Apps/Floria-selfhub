@@ -14,9 +14,9 @@ export interface Tab {
 /** Marcador usado no lugar do id de um serviço para a aba de configurações */
 export const SETTINGS_ID = '__settings__'
 
-const DEFAULT_PANEL_SIZE = 68
-const MIN_PANEL_SIZE = 58
-const MAX_PANEL_SIZE = 68
+const DEFAULT_PANEL_SIZE = 58
+const MIN_PANEL_SIZE = 45
+const MAX_PANEL_SIZE = 85
 
 interface StoredTab {
   serviceId: string | null

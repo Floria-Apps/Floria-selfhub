@@ -17,6 +17,7 @@ import AppIconButton from '../components/ui/AppIconButton.vue'
 import Segmented from '../components/ui/Segmented.vue'
 import SettingRow from '../components/ui/SettingRow.vue'
 import Switch from '../components/ui/Switch.vue'
+import ConfirmDialog from '../components/ui/ConfirmDialog.vue'
 
 const { t } = useI18n()
 const ui = useUi()
@@ -54,45 +55,55 @@ const setLocale = (l: Locale) => (locale.value = l)
 
 const serviceColorOptions = Object.values(META)
 
-// Confirmação em dois cliques para ações destrutivas.
-const confirming = ref<string | null>(null)
-let confirmTimer: ReturnType<typeof setTimeout> | undefined
+const pendingRemoval = ref<{
+  type: 'service' | 'all'
+  service?: ServiceConfig
+} | null>(null)
 
-function confirmOnce(key: string, action: () => void) {
-  if (confirming.value === key) {
-    confirming.value = null
-    action()
-    return
+const confirmingRemoval = computed(
+  () => pendingRemoval.value !== null,
+)
+
+function removeService(service: ServiceConfig) {
+  pendingRemoval.value = {
+    type: 'service',
+    service,
   }
-
-  confirming.value = key
-  clearTimeout(confirmTimer)
-  confirmTimer = setTimeout(() => {
-    confirming.value = null
-  }, 4000)
-}
-
-function removeService(s: ServiceConfig) {
-  confirmOnce(`svc:${s.id}`, () => {
-    tabs.closeForService(s.id)
-    services.remove(s.id)
-    ui.showToast(t('panel.removed', { name: s.name }))
-  })
 }
 
 function removeAll() {
-  confirmOnce('all', () => {
-    for (const s of [...services.list]) {
-      tabs.closeForService(s.id)
-      services.remove(s.id)
+  pendingRemoval.value = { type: 'all' }
+}
+
+function cancelRemoval() {
+  pendingRemoval.value = null
+}
+
+function confirmRemoval() {
+  const pending = pendingRemoval.value
+  if (!pending) return
+
+  if (pending.type === 'service' && pending.service) {
+    const service = pending.service
+
+    tabs.closeForService(service.id)
+    services.remove(service.id)
+    ui.showToast(t('panel.removed', { name: service.name }))
+  } else if (pending.type === 'all') {
+    for (const service of [...services.list]) {
+      tabs.closeForService(service.id)
+      services.remove(service.id)
     }
 
     ui.showToast(t('settings.resetDone'))
-  })
+  }
+
+  pendingRemoval.value = null
 }
 
 function updateGroup(service: ServiceConfig, event: Event) {
   const input = event.target as HTMLInputElement
+
   services.updateOrganization(service.id, {
     favorite: service.favorite ?? false,
     group: input.value,
@@ -279,6 +290,7 @@ const card =
       </div>
     </section>
 
+    <!-- Sistema -->
     <section
       v-if="isDesktop"
       :class="card"
@@ -321,7 +333,7 @@ const card =
     <!-- Serviços -->
     <section :class="card" aria-labelledby="s-services">
       <div class="flex items-center justify-between gap-3">
-        <h2 id="s-services" class="text-lg font-semibold">
+        <h2 class="text-lg font-semibold">
           {{ t('settings.services') }}
         </h2>
 
@@ -386,36 +398,25 @@ const card =
                 group: s.group,
               })"
             />
+
             <AppIconButton
               icon="edit"
               :label="t('service.edit')"
               @click="ui.openModal(s.id)"
             />
 
-            <template v-if="confirming === `svc:${s.id}`">
-              <AppButton
-                variant="filled"
-                :danger="true"
-                icon="delete"
-                @click="removeService(s)"
-              >
-                {{ t('common.confirm') }}
-              </AppButton>
-            </template>
-
-            <template v-else>
-              <AppIconButton
-                icon="delete"
-                :label="t('common.remove')"
-                @click="removeService(s)"
-              />
-            </template>
+            <AppIconButton
+              icon="delete"
+              :label="t('common.remove')"
+              @click="removeService(s)"
+            />
           </div>
 
           <m3e-form-field variant="outlined" class="w-full sm:w-64">
             <label slot="label" :for="`service-group-${s.id}`">
               {{ t('settings.group') }}
             </label>
+
             <input
               :id="`service-group-${s.id}`"
               :value="s.group ?? ''"
@@ -430,7 +431,7 @@ const card =
 
     <!-- Dados -->
     <section :class="card" aria-labelledby="s-data">
-      <h2 id="s-data" class="text-lg font-semibold">
+      <h2 class="text-lg font-semibold">
         {{ t('settings.data') }}
       </h2>
 
@@ -449,7 +450,9 @@ const card =
         </SettingRow>
 
         <div class="py-4">
-          <p class="font-medium">{{ t('settings.import') }}</p>
+          <p class="font-medium">
+            {{ t('settings.import') }}
+          </p>
 
           <p class="mt-0.5 text-sm text-on-surface-variant">
             {{ t('settings.importDesc') }}
@@ -492,17 +495,13 @@ const card =
           :description="t('settings.removeAllDesc')"
         >
           <AppButton
-            :variant="confirming === 'all' ? 'filled' : 'tonal'"
+            variant="tonal"
             :danger="true"
             icon="delete_forever"
             :disabled="!services.list.length"
             @click="removeAll"
           >
-            {{
-              confirming === 'all'
-                ? t('common.confirm')
-                : t('common.remove')
-            }}
+            {{ t('common.remove') }}
           </AppButton>
         </SettingRow>
       </div>
@@ -510,7 +509,7 @@ const card =
 
     <!-- Sobre -->
     <section :class="card" aria-labelledby="s-about">
-      <h2 id="s-about" class="text-lg font-semibold">
+      <h2 class="text-lg font-semibold">
         {{ t('settings.about') }}
       </h2>
 
@@ -518,5 +517,25 @@ const card =
         {{ t('settings.aboutText', { version: pkg.version }) }}
       </p>
     </section>
+
+    <!-- Confirmação de exclusão -->
+    <ConfirmDialog
+      :open="confirmingRemoval"
+      :title="
+        pendingRemoval?.type === 'all'
+          ? t('settings.removeAll')
+          : t('common.remove')
+      "
+      :message="
+        pendingRemoval?.type === 'all'
+          ? t('settings.removeAllDesc')
+          : pendingRemoval?.service?.name ?? ''
+      "
+      :confirm-text="t('common.confirm')"
+      :cancel-text="t('common.cancel')"
+      @confirm="confirmRemoval"
+      @cancel="cancelRemoval"
+      @update:open="(open) => !open && cancelRemoval()"
+    />
   </div>
 </template>

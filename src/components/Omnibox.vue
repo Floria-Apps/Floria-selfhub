@@ -78,7 +78,9 @@ const actions = computed<Action[]>(() => {
   ]
 
   const q = query.value.trim().toLowerCase()
-  return q ? all.filter((action) => action.label.toLowerCase().includes(q)) : all
+  return q
+    ? all.filter((action) => action.label.toLowerCase().includes(q))
+    : all
 })
 
 const total = computed(() => matches.value.length + actions.value.length)
@@ -94,8 +96,8 @@ async function open() {
 
 function handleFocus() {
   focused.value = true
+  activeIndex.value = 0
 }
-
 function close() {
   focused.value = false
   query.value = ''
@@ -104,8 +106,6 @@ function close() {
 }
 
 function handleBlur() {
-  if (!focused.value) return
-
   focused.value = false
   query.value = ''
   activeIndex.value = 0
@@ -218,7 +218,7 @@ const sectionTitle =
       search
     </span>
 
-    <!-- Campo gerenciado pelo m3e -->
+    <!-- Campo de pesquisa -->
     <input
       slot="input"
       ref="input"
@@ -291,8 +291,8 @@ const sectionTitle =
           :aria-selected="i === activeIndex"
           :style="rowStyle(i === activeIndex)"
           @mouseenter="activeIndex = i"
-          @mousedown.prevent
-          @click="run(i)"
+          @pointerdown.prevent
+          @click.stop="run(i)"
         >
           <span
             slot="leading"
@@ -321,6 +321,7 @@ const sectionTitle =
         </m3e-list-item>
       </div>
 
+      <!-- Ações -->
       <div
         v-if="actions.length"
         role="group"
@@ -345,8 +346,8 @@ const sectionTitle =
           :aria-selected="matches.length + j === activeIndex"
           :style="rowStyle(matches.length + j === activeIndex)"
           @mouseenter="activeIndex = matches.length + j"
-          @mousedown.prevent
-          @click="run(matches.length + j)"
+          @pointerdown.prevent
+          @click.stop="run(matches.length + j)"
         >
           <span
             slot="leading"
@@ -361,6 +362,7 @@ const sectionTitle =
       </div>
     </div>
 
+    <!-- Nenhum resultado -->
     <p
       v-if="!matches.length && query.trim()"
       role="status"

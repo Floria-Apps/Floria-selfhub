@@ -252,5 +252,8 @@
   "notification.issue": "{name} apresentou um problema.",
   "notification.recovered": "{name} voltou ao normal.",
   "notification.permissionDenied": "A permissão para notificações não está mais disponível.",
-  "notification.failed": "Não foi possível enviar a notificação de status."
+  "notification.failed": "Não foi possível enviar a notificação de status.",
+  "upd.notInUse": "sem uso",
+  "nd.recent": "Tocados recentemente",
+  "nd.lastScan": "Última varredura {ago}"
 }

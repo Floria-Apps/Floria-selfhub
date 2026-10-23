@@ -44,6 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          args: --bundles appimage,deb,rpm
           tagName: ${{ github.ref_name }}
           releaseName: "Floria SelfHub ${{ github.ref_name }}"
           releaseBody: |
@@ -80,6 +81,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          args: --bundles nsis
           tagName: ${{ github.ref_name }}
           releaseName: "Floria SelfHub ${{ github.ref_name }}"
           releaseDraft: false

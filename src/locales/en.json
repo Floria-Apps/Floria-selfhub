@@ -252,5 +252,8 @@
   "notification.issue": "{name} reports an issue.",
   "notification.recovered": "{name} is back to normal.",
   "notification.permissionDenied": "Notification permission is no longer available.",
-  "notification.failed": "Could not send a status notification."
+  "notification.failed": "Could not send a status notification.",
+  "upd.notInUse": "not in use",
+  "nd.recent": "Recently played",
+  "nd.lastScan": "Last scan {ago}"
 }

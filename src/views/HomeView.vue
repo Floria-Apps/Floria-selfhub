@@ -135,18 +135,18 @@ function dropIntoSection(
             @dragover.prevent
             @drop.stop="dropIntoSection(tile.service.id, section.group, section.favorite, $event)"
           >
-            <m3e-card
-              variant="filled"
-              actionable
-              class="block min-h-56 cursor-pointer transition hover:-translate-y-0.5"
-              :style="{
-                '--m3e-filled-card-container-color': tintOn(tile.meta.color, 20, 'var(--md-surface-container)'),
-                '--m3e-card-shape': '1.75rem',
-                '--m3e-card-padding': '1.25rem',
-              }"
-              @pointerdown="suppressCardClick = false"
-              @click="openService(tile.service.id)"
-            >
+              <m3e-card
+                variant="filled"
+                actionable
+                class="block min-h-56 cursor-pointer"
+                :style="{
+                  '--m3e-filled-card-container-color': tintOn(tile.meta.color, 20, 'var(--md-surface-container)'),
+                  '--m3e-card-shape': '1.75rem',
+                  '--m3e-card-padding': '1.25rem',
+                }"
+                @pointerdown="suppressCardClick = false"
+                @click="openService(tile.service.id)"
+              >
               <div slot="content" class="flex min-h-48 flex-col justify-between gap-5 text-left">
                 <span aria-hidden="true"
                   class="material-symbols-rounded grid size-14 place-items-center rounded-2xl text-[28px]"

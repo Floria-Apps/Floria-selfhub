@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -111,67 +112,65 @@ function moveDown(id: string) {
             : 'text-on-surface-variant hover:bg-surface-high'
         "
       >
-
-          <button
-            type="button"
-            role="tab"
-            :aria-selected="row.id === tabs.activeId"
-            class="flex min-w-0 flex-1 items-center gap-3 rounded-full py-2 text-left text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            :class="editing ? 'pr-1 pl-2' : 'pr-10 pl-2'"
-            @click="tabs.activate(row.id)"
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="row.id === tabs.activeId"
+          class="flex min-w-0 flex-1 items-center gap-3 rounded-full py-2 text-left text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          :class="editing ? 'pr-1 pl-2' : 'pr-10 pl-2'"
+          @click="tabs.activate(row.id)"
+        >
+          <span
+            aria-hidden="true"
+            class="material-symbols-rounded relative grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
+            :style="
+              row.color
+                ? {
+                    background: tintOn(row.color, 38, 'var(--md-surface)'),
+                    color: tintOn(row.color, 70, 'var(--md-on-surface)'),
+                  }
+                : {
+                    background: 'var(--md-surface-high)',
+                  }
+            "
           >
-            <span
-              aria-hidden="true"
-              class="material-symbols-rounded relative grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
-              :style="
-                row.color
-                  ? {
-                      background: tintOn(row.color, 38, 'var(--md-surface)'),
-                      color: tintOn(row.color, 70, 'var(--md-on-surface)'),
-                    }
-                  : {
-                      background: 'var(--md-surface-high)',
-                    }
-              "
-            >
-              {{ row.icon }}
+            {{ row.icon }}
 
-              <StatusDot
-                v-if="row.state"
-                :state="row.state"
-                class="absolute -right-0.5 -bottom-0.5 ring-2 ring-surface"
-              />
-            </span>
+            <StatusDot
+              v-if="row.state"
+              :state="row.state"
+              class="absolute -right-0.5 -top-0.5 ring-2 ring-surface"
+            />
+          </span>
 
-            <span class="truncate">
-              {{ row.name }}
-            </span>
-          </button>
+          <span class="truncate">
+            {{ row.name }}
+          </span>
+        </button>
 
         <!-- Controles de edição -->
         <div
           v-if="editing"
           class="flex shrink-0 items-center gap-0.5 pr-1"
         >
-            <AppIconButton
-              size="extra-small"
-              icon="keyboard_arrow_up"
-              :label="t('tab.moveUp')"
-              :disabled="row.index === 0"
-              @click.stop="moveUp(row.id)"
-            />
+          <AppIconButton
+            size="extra-small"
+            icon="keyboard_arrow_up"
+            :label="t('tab.moveUp')"
+            :disabled="row.index === 0"
+            @click.stop="moveUp(row.id)"
+          />
 
-            <AppIconButton
-              size="extra-small"
-              icon="keyboard_arrow_down"
-              :label="t('tab.moveDown')"
-              :disabled="row.index === rows.length - 1"
-              @click.stop="moveDown(row.id)"
-            />
+          <AppIconButton
+            size="extra-small"
+            icon="keyboard_arrow_down"
+            :label="t('tab.moveDown')"
+            :disabled="row.index === rows.length - 1"
+            @click.stop="moveDown(row.id)"
+          />
         </div>
 
         <!-- Fechar -->
-
         <AppIconButton
           v-else
           size="extra-small"
@@ -180,21 +179,18 @@ function moveDown(id: string) {
           class="absolute right-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100"
           @click.stop="tabs.close(row.id)"
         />
-
       </div>
     </nav>
-
 
     <AppButton
       class="mt-2 w-full"
       variant="tonal"
-      size="large"
+      size="medium"
       icon="add"
       @click="tabs.openNewTab()"
     >
       {{ t('tab.new') }}
     </AppButton>
-
 
     <AppButton
       class="mt-1 w-full justify-start"
