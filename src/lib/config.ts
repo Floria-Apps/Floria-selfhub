@@ -45,6 +45,8 @@ export function parseConfig(text: string): { services: ServiceDraft[]; prefs: un
       password: typeof raw.password === 'string' ? raw.password : undefined,
       slug: str(raw.slug),
       insecure: raw.insecure === true,
+      favorite: raw.favorite === true,
+      group: str(raw.group),
     })
   }
   return { services, prefs: data.prefs }

@@ -1,16 +1,16 @@
-
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { META } from '../services/registry'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { hostOf } from '../lib/address'
-import { t } from '../lib/i18n'
 import { tintOn, visualState } from '../lib/status'
-import StatusDot from './StatusDot.vue'
+import StatusDot from './ui/StatusDot.vue'
 
+const { t } = useI18n()
 const tabs = useTabs()
 const services = useServices()
 const snaps = useSnapshots()
@@ -161,8 +161,14 @@ const bubble = (color: string) => ({
   color: tintOn(color, 70, 'var(--md-on-surface)'),
 })
 
-const rowBase =
-  'flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm transition-colors'
+const rowStyle = (active: boolean) => ({
+  '--m3e-list-item-container-color': active
+    ? 'var(--md-secondary-container)'
+    : 'transparent',
+  '--m3e-list-item-label-text-color': active
+    ? 'var(--md-on-secondary-container)'
+    : 'var(--md-on-surface)',
+})
 
 const sectionTitle =
   'px-4 pt-2 pb-1 text-xs font-medium tracking-wide text-on-surface-variant uppercase'
@@ -170,7 +176,7 @@ const sectionTitle =
 
 <template>
   <m3e-search-view
-    class="block w-full"
+    class="omnibox-search block w-full min-w-0"
     mode="docked"
     contained
     hide-search-icon
@@ -261,59 +267,103 @@ const sectionTitle =
 
     <!-- Resultados de serviços -->
     <div
-      v-if="matches.length"
-      class="p-2"
+      id="omni-list"
+      ref="list"
+      role="listbox"
+      :aria-label="t('omni.aria')"
     >
-      <p :class="sectionTitle">
-        {{ t('omni.services') }}
-      </p>
-
-      <button
-        v-for="(s, i) in matches"
-        :id="`omni-opt-${i}`"
-        :key="s.id"
-        type="button"
-        role="option"
-        :aria-selected="i === activeIndex"
-        :class="[
-          rowBase,
-          i === activeIndex
-            ? 'bg-secondary-container text-on-secondary-container'
-            : 'hover:bg-surface-high',
-        ]"
-        @mouseenter="activeIndex = i"
-        @mousedown.prevent="run(i)"
+      <div
+        v-if="matches.length"
+        role="group"
+        aria-labelledby="omni-services-label"
+        class="p-2"
       >
-        <span
-          aria-hidden="true"
-          class="material-symbols-rounded grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
-          :style="bubble(META[s.type].color)"
-        >
-          {{ META[s.type].icon }}
-        </span>
+        <p id="omni-services-label" :class="sectionTitle">
+          {{ t('omni.services') }}
+        </p>
 
-        <span class="min-w-0 flex-1">
-          <span class="block truncate font-medium">
-            {{ s.name }}
+        <m3e-list-item
+          v-for="(s, i) in matches"
+          :id="`omni-opt-${i}`"
+          :key="s.id"
+          tabindex="-1"
+          role="option"
+          :aria-selected="i === activeIndex"
+          :style="rowStyle(i === activeIndex)"
+          @mouseenter="activeIndex = i"
+          @mousedown.prevent
+          @click="run(i)"
+        >
+          <span
+            slot="leading"
+            aria-hidden="true"
+            class="material-symbols-rounded grid size-9 shrink-0 place-items-center rounded-full text-[20px]"
+            :style="bubble(META[s.type].color)"
+          >
+            {{ META[s.type].icon }}
           </span>
-          <span class="block truncate text-xs opacity-70">
+
+          {{ s.name }}
+
+          <span slot="supporting-text">
             {{ META[s.type].label }}
           </span>
-        </span>
 
-        <span
-          v-if="!ui.hideAddresses"
-          class="max-w-[40%] shrink-0 truncate text-xs opacity-70"
+          <span slot="trailing" class="flex shrink-0 items-center gap-2">
+            <span
+              v-if="!ui.hideAddresses"
+              class="max-w-48 truncate text-xs opacity-70"
+            >
+              {{ hostOf(s.baseUrl) }}
+            </span>
+            <StatusDot :state="visualState(snaps.stateOf(s.id))" />
+          </span>
+        </m3e-list-item>
+      </div>
+
+      <div
+        v-if="actions.length"
+        role="group"
+        aria-labelledby="omni-actions-label"
+        class="p-2"
+      >
+        <div
+          v-if="matches.length"
+          class="mx-2 my-1 h-px bg-outline-variant/60"
+        />
+
+        <p id="omni-actions-label" :class="sectionTitle">
+          {{ t('omni.actions') }}
+        </p>
+
+        <m3e-list-item
+          v-for="(action, j) in actions"
+          :id="`omni-opt-${matches.length + j}`"
+          :key="action.id"
+          tabindex="-1"
+          role="option"
+          :aria-selected="matches.length + j === activeIndex"
+          :style="rowStyle(matches.length + j === activeIndex)"
+          @mouseenter="activeIndex = matches.length + j"
+          @mousedown.prevent
+          @click="run(matches.length + j)"
         >
-          {{ hostOf(s.baseUrl) }}
-        </span>
+          <span
+            slot="leading"
+            aria-hidden="true"
+            class="material-symbols-rounded grid size-9 shrink-0 place-items-center rounded-full bg-surface-container text-[20px] text-primary"
+          >
+            {{ action.icon }}
+          </span>
 
-        <StatusDot :state="visualState(snaps.stateOf(s.id))" />
-      </button>
+          {{ action.label }}
+        </m3e-list-item>
+      </div>
     </div>
 
     <p
-      v-else-if="query.trim()"
+      v-if="!matches.length && query.trim()"
+      role="status"
       class="px-4 py-3 text-sm text-on-surface-variant"
     >
       {{ t('omni.none') }}
@@ -321,52 +371,10 @@ const sectionTitle =
 
     <p
       v-else-if="!services.list.length"
+      role="status"
       class="px-4 py-3 text-sm text-on-surface-variant"
     >
       {{ t('settings.servicesEmpty') }}
     </p>
-
-    <!-- Ações rápidas -->
-    <div
-      v-if="actions.length"
-      class="p-2"
-    >
-      <div
-        v-if="matches.length || query.trim() === ''"
-        class="mx-2 my-1 h-px bg-outline-variant/60"
-      />
-
-      <p :class="sectionTitle">
-        {{ t('omni.actions') }}
-      </p>
-
-      <button
-        v-for="(action, j) in actions"
-        :id="`omni-opt-${matches.length + j}`"
-        :key="action.id"
-        type="button"
-        role="option"
-        :aria-selected="matches.length + j === activeIndex"
-        :class="[
-          rowBase,
-          matches.length + j === activeIndex
-            ? 'bg-secondary-container text-on-secondary-container'
-            : 'hover:bg-surface-high',
-        ]"
-        @mouseenter="activeIndex = matches.length + j"
-        @mousedown.prevent="run(matches.length + j)"
-      >
-        <span
-          aria-hidden="true"
-          class="material-symbols-rounded grid size-9 shrink-0 place-items-center rounded-full bg-surface-container text-[20px] text-primary"
-        >
-          {{ action.icon }}
-        </span>
-
-        <span class="flex-1 font-medium">
-          {{ action.label }}
-        </span>
-      </button>
-    </div>
   </m3e-search-view>
 </template>

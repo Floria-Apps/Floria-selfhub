@@ -14,13 +14,18 @@ export const gatus = (c: ServiceConfig): ServiceAdapter => ({
       else throw e
     }
 
+    const latestResult = (ep: (typeof data)[number]) =>
+      Array.isArray(ep.results) ? ep.results[0] : undefined
+
     const items: DetailItem[] = data.map((ep) => {
-      const last = ep.results?.[ep.results.length - 1]
+      const last = latestResult(ep)
       return {
         id: ep.key ?? ep.name,
         title: ep.name,
         subtitle: ep.group || undefined,
-        trailing: last ? `${Math.round(last.duration / 1e6)} ms` : undefined,
+        trailing: typeof last?.duration === 'number' && Number.isFinite(last.duration)
+          ? `${Math.round(last.duration / 1e6)} ms`
+          : undefined,
         status: last ? (last.success ? 'up' : 'down') : 'idle',
       }
     })
@@ -30,8 +35,8 @@ export const gatus = (c: ServiceConfig): ServiceAdapter => ({
     const healthy = items.filter((i) => i.status === 'up').length
     const failing = items.filter((i) => i.status === 'down').length
     const durations = data
-      .map((ep) => ep.results?.[ep.results.length - 1]?.duration)
-      .filter((d): d is number => typeof d === 'number')
+      .map((ep) => latestResult(ep)?.duration)
+      .filter((d): d is number => typeof d === 'number' && Number.isFinite(d))
     const avg = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length / 1e6 : null
 
     return {

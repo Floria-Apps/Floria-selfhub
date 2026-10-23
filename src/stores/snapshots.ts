@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia'
 import { reactive, ref, watch } from 'vue'
+import { isTauri } from '@tauri-apps/api/core'
+import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification'
+import { t } from '../lib/i18n'
 import { createAdapter } from '../services/registry'
 import type { ServiceAction, ServiceSnapshot } from '../services/types'
 import { useServices } from './services'
@@ -19,6 +22,26 @@ export const useSnapshots = defineStore('snapshots', () => {
   const states = reactive<Record<string, SnapshotState>>({})
   const busyActions = reactive<Record<string, boolean>>({})
   const now = ref(Date.now())
+  const healthyById = new Map<string, boolean>()
+
+  async function notifyStatusChange(serviceName: string, healthy: boolean) {
+    if (!isTauri() || !ui.notificationsEnabled) return
+
+    try {
+      if (!(await isPermissionGranted())) {
+        ui.notificationsEnabled = false
+        ui.showToast(t('notification.permissionDenied'), 'error')
+        return
+      }
+      sendNotification({
+        title: t('notification.title'),
+        body: t(healthy ? 'notification.recovered' : 'notification.issue', { name: serviceName }),
+      })
+    } catch (error) {
+      console.error('Falha ao enviar notificação de status', error)
+      ui.showToast(t('notification.failed'), 'error')
+    }
+  }
 
   const stateOf = (id: string | null | undefined): SnapshotState | undefined =>
     id ? states[id] : undefined
@@ -32,9 +55,19 @@ export const useSnapshots = defineStore('snapshots', () => {
     try {
       const data = await createAdapter(config).snapshot()
       states[id] = { loading: false, data, updatedAt: Date.now() }
+      const healthy = data.health === 'ok'
+      const previousHealthy = healthyById.get(id)
+      healthyById.set(id, healthy)
+      if (previousHealthy !== undefined && previousHealthy !== healthy) {
+        void notifyStatusChange(config.name, healthy)
+      }
     } catch (e) {
       // Mantém os últimos dados bons na tela e marca o erro
       states[id] = { loading: false, data: prev.data, updatedAt: prev.updatedAt, error: (e as Error).message }
+      if (healthyById.get(id) === true) {
+        healthyById.set(id, false)
+        void notifyStatusChange(config.name, false)
+      }
     }
   }
 
@@ -65,7 +98,7 @@ export const useSnapshots = defineStore('snapshots', () => {
     const seconds = ui.refreshSeconds
     if (seconds > 0) {
       pollTimer = setInterval(() => {
-        if (!document.hidden) refreshAll()
+        refreshAll()
       }, seconds * 1000)
     }
   }

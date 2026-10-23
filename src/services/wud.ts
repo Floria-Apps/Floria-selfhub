@@ -1,4 +1,4 @@
-import { basicAuth, getJson, request } from '../lib/http'
+import { basicAuth, getJson, HttpError, request } from '../lib/http'
 import { fmtNumber } from '../lib/format'
 import { t } from '../lib/i18n'
 import type { DetailItem, ServiceAdapter, ServiceConfig } from './types'
@@ -10,11 +10,21 @@ export const wud = (c: ServiceConfig): ServiceAdapter => {
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (c.username) headers.Authorization = basicAuth(c.username, c.password ?? '')
 
+  const getAppVersion = async () => {
+    try {
+      const app = await getJson<{ version?: string }>(c, '/api/app', { headers })
+      return app.version ?? '-'
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 404) return '-'
+      throw error
+    }
+  }
+
   return {
     async snapshot() {
-      const [raw, app] = await Promise.all([
+      const [raw, version] = await Promise.all([
         getJson(c, '/api/containers', { headers }),
-        getJson(c, '/api/app', { headers }).catch(() => null),
+        getAppVersion(),
       ])
       const list: any[] = Array.isArray(raw) ? raw : (raw?.data ?? raw?.items ?? raw?.containers ?? [])
 
@@ -57,7 +67,7 @@ export const wud = (c: ServiceConfig): ServiceAdapter => {
           { label: t('wud.containers'), value: fmtNumber(items.length), icon: 'inventory_2', tone: 'primary' },
           { label: t('upd.available'), value: fmtNumber(updates), icon: 'system_update_alt', tone: updates > 0 ? 'tertiary' : 'neutral' },
           { label: t('upd.upToDate'), value: fmtNumber(items.length - updates), icon: 'check_circle', tone: 'secondary' },
-          { label: t('common.version'), value: String(app?.version ?? '-'), icon: 'info', tone: 'neutral' },
+          { label: t('common.version'), value: version, icon: 'info', tone: 'neutral' },
         ],
         itemsTitle: t('wud.containers'),
         emptyText: t('wud.empty'),

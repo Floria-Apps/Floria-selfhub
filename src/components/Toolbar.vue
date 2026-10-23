@@ -1,17 +1,33 @@
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { isTauri } from '../lib/http'
-import { t } from '../lib/i18n'
 import Omnibox from './Omnibox.vue'
-import AppIconButton from './AppIconButton.vue'
+import AppIconButton from './ui/AppIconButton.vue'
 
 const tabs = useTabs()
+const { t } = useI18n()
 const services = useServices()
 const snaps = useSnapshots()
+const toolbar = ref<HTMLElement>()
+const compact = ref(false)
+let resizeObserver: ResizeObserver | undefined
+
+onMounted(() => {
+  const splitPane = toolbar.value?.closest('m3e-split-pane')
+  if (!splitPane) return
+
+  resizeObserver = new ResizeObserver(([entry]) => {
+    compact.value = entry.contentRect.width < 720
+  })
+  resizeObserver.observe(splitPane)
+})
+
+onUnmounted(() => resizeObserver?.disconnect())
 
 const refreshing = computed(() =>
   tabs.activeService
@@ -42,11 +58,13 @@ async function openExternal() {
 
 <template>
   <header
+    ref="toolbar"
     data-tauri-drag-region
-    class="relative z-20 flex h-16 shrink-0 items-center gap-1 rounded-[28px] bg-surface px-3 transition-colors duration-500"
+    class="app-toolbar relative z-20 flex h-16 shrink-0 items-center gap-1 rounded-[28px] bg-surface px-3 transition-colors duration-500"
+    :class="{ 'is-compact': compact }"
   >
     <AppIconButton
-      size="medium"
+      :size="compact ? 'small' : 'medium'"
       icon="arrow_back"
       :label="t('nav.back')"
       :disabled="!tabs.canBack"
@@ -54,7 +72,7 @@ async function openExternal() {
     />
 
     <AppIconButton
-      size="medium"
+      :size="compact ? 'small' : 'medium'"
       icon="arrow_forward"
       :label="t('nav.forward')"
       :disabled="!tabs.canForward"
@@ -62,19 +80,22 @@ async function openExternal() {
     />
 
     <AppIconButton
-      size="medium"
+      :size="compact ? 'small' : 'medium'"
       icon="refresh"
       :label="t('nav.refresh')"
       :loading="refreshing"
       @click="refresh"
     />
 
-    <div class="mx-2 flex min-w-0 flex-1 justify-center">
+    <div
+      class="toolbar-omnibox mx-2 flex min-w-[10rem] justify-center"
+      :class="compact ? 'flex-[0_1_10rem]' : 'flex-1'"
+    >
       <Omnibox class="w-full max-w-2xl" />
     </div>
 
     <AppIconButton
-      size="medium"
+      :size="compact ? 'small' : 'medium'"
       icon="open_in_new"
       :label="t('nav.external')"
       :disabled="!tabs.activeService"
@@ -82,7 +103,7 @@ async function openExternal() {
     />
 
     <AppIconButton
-      size="medium"
+      :size="compact ? 'small' : 'medium'"
       icon="right_panel_open"
       :label="t('nav.panel')"
       :variant="tabs.panelOpen && tabs.activeService ? 'tonal' : 'standard'"
@@ -90,5 +111,6 @@ async function openExternal() {
       :disabled="!tabs.activeService"
       @click="tabs.togglePanel()"
     />
+
   </header>
 </template>

@@ -17,17 +17,24 @@ export const kuma = (c: ServiceConfig): ServiceAdapter => ({
     ])
 
     const items: DetailItem[] = []
+    const uptimes: number[] = []
     for (const group of page.publicGroupList ?? []) {
       for (const m of group.monitorList ?? []) {
         const list: any[] = beats.heartbeatList?.[m.id] ?? []
         const last = list[list.length - 1]
-        const uptime = beats.uptimeList?.[`${m.id}_24`]
+        const rawUptime = beats.uptimeList?.[`${m.id}_24`]
+        const uptime = rawUptime == null ? undefined : Number(rawUptime)
+        if (uptime != null && Number.isFinite(uptime)) uptimes.push(uptime)
         items.push({
           id: String(m.id),
           title: m.name,
           subtitle: group.name,
-          trailing: uptime != null ? `${fmtDecimal(uptime * 100)}%` : last?.ping != null ? `${last.ping} ms` : undefined,
-          status: last ? (STATUS[last.status] ?? 'idle') : 'idle',
+          trailing: uptime != null && Number.isFinite(uptime)
+            ? `${fmtDecimal(uptime * 100)}%`
+            : last?.ping != null
+              ? `${last.ping} ms`
+              : undefined,
+          status: last ? (STATUS[Number(last.status)] ?? 'idle') : 'idle',
         })
       }
     }
@@ -36,8 +43,9 @@ export const kuma = (c: ServiceConfig): ServiceAdapter => ({
 
     const up = items.filter((i) => i.status === 'up').length
     const down = items.filter((i) => i.status === 'down').length
-    const uptimes = Object.values<number>(beats.uptimeList ?? {})
-    const avg = uptimes.length ? (uptimes.reduce((a, b) => a + b, 0) / uptimes.length) * 100 : null
+    const avg = uptimes.length
+      ? (uptimes.reduce((a, b) => a + b, 0) / uptimes.length) * 100
+      : null
 
     return {
       health: down > 0 ? 'warn' : 'ok',

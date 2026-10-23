@@ -1,9 +1,9 @@
 
 <script setup lang="ts">
 import { useTabs } from '../stores/tabs'
-import HomeView from './HomeView.vue'
-import SettingsView from './SettingsView.vue'
-import ServiceView from './ServiceView.vue'
+import HomeView from '../views/HomeView.vue'
+import SettingsView from '../views/SettingsView.vue'
+import ServiceView from '../views/ServiceView.vue'
 
 const tabs = useTabs()
 </script>

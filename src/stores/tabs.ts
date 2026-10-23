@@ -7,19 +7,43 @@ export interface Tab {
   id: string
   /** null = página inicial (nova aba) */
   serviceId: string | null
+  panelOpen: boolean
+  panelSize: number
 }
 
 /** Marcador usado no lugar do id de um serviço para a aba de configurações */
 export const SETTINGS_ID = '__settings__'
 
+const DEFAULT_PANEL_SIZE = 68
+const MIN_PANEL_SIZE = 58
+const MAX_PANEL_SIZE = 68
+
+interface StoredTab {
+  serviceId: string | null
+  panelOpen?: boolean
+  panelSize?: number
+}
+
 const newId = () => crypto.randomUUID()
+
+function createTab(
+  serviceId: string | null,
+  panelOpen = false,
+  panelSize = DEFAULT_PANEL_SIZE,
+): Tab {
+  return {
+    id: newId(),
+    serviceId,
+    panelOpen,
+    panelSize,
+  }
+}
 
 export const useTabs = defineStore('tabs', () => {
   const services = useServices()
 
-  const tabs = ref<Tab[]>([{ id: newId(), serviceId: null }])
+  const tabs = ref<Tab[]>([createTab(null)])
   const activeId = ref<string>(tabs.value[0].id)
-  const panelOpen = ref(false)
 
   // Histórico de navegação entre abas (botões voltar e avançar)
   const nav = ref<string[]>([activeId.value])
@@ -28,6 +52,8 @@ export const useTabs = defineStore('tabs', () => {
   const active = computed(() => tabs.value.find((t) => t.id === activeId.value))
   const activeService = computed(() => services.get(active.value?.serviceId))
   const isSettings = computed(() => active.value?.serviceId === SETTINGS_ID)
+  const panelOpen = computed(() => active.value?.panelOpen ?? false)
+  const panelSize = computed(() => active.value?.panelSize ?? DEFAULT_PANEL_SIZE)
   const canBack = computed(() => navIndex.value > 0)
   const canForward = computed(() => navIndex.value < nav.value.length - 1)
 
@@ -54,10 +80,7 @@ export const useTabs = defineStore('tabs', () => {
   }
 
   function openNewTab() {
-    const tab = {
-      id: newId(),
-      serviceId: null,
-    }
+    const tab = createTab(null)
 
     tabs.value.push(tab)
     activate(tab.id)
@@ -77,10 +100,7 @@ export const useTabs = defineStore('tabs', () => {
       return
     }
 
-    const tab = {
-      id: newId(),
-      serviceId,
-    }
+    const tab = createTab(serviceId)
 
     tabs.value.push(tab)
     activate(tab.id)
@@ -98,10 +118,7 @@ export const useTabs = defineStore('tabs', () => {
       return
     }
 
-    const tab = {
-      id: newId(),
-      serviceId: SETTINGS_ID,
-    }
+    const tab = createTab(SETTINGS_ID)
 
     tabs.value.push(tab)
     activate(tab.id)
@@ -148,10 +165,7 @@ export const useTabs = defineStore('tabs', () => {
     nav.value = nav.value.filter((x) => x !== id)
 
     if (tabs.value.length === 0) {
-      const tab = {
-        id: newId(),
-        serviceId: null,
-      }
+      const tab = createTab(null)
 
       tabs.value.push(tab)
       nav.value = [tab.id]
@@ -190,34 +204,58 @@ export const useTabs = defineStore('tabs', () => {
   }
 
   const togglePanel = () => {
-    panelOpen.value = !panelOpen.value
+    if (active.value && activeService.value) {
+      active.value.panelOpen = !active.value.panelOpen
+    }
+  }
+
+  function setPanelSize(value: number) {
+    if (!active.value || !Number.isFinite(value)) return
+
+    active.value.panelSize = Math.min(
+      MAX_PANEL_SIZE,
+      Math.max(MIN_PANEL_SIZE, value),
+    )
   }
 
   // Restaura as abas abertas da última sessão
   async function restore() {
     const saved = await getItem<{
-      serviceIds: (string | null)[]
-      active: number
+      tabs?: StoredTab[]
+      serviceIds?: (string | null)[]
+      active?: number
     } | null>('tabs', null)
 
-    if (saved?.serviceIds?.length) {
-      const valid = saved.serviceIds.filter(
-        (id) =>
-          id === null ||
-          id === SETTINGS_ID ||
-          services.get(id),
+    if (saved) {
+      const savedTabs: StoredTab[] = saved.tabs?.length
+        ? saved.tabs
+        : (saved.serviceIds ?? []).map((serviceId) => ({ serviceId }))
+      const valid = savedTabs.filter(
+        ({ serviceId }) =>
+          serviceId === null ||
+          serviceId === SETTINGS_ID ||
+          services.get(serviceId),
       )
 
       if (valid.length) {
-        tabs.value = valid.map((serviceId) => ({
-          id: newId(),
-          serviceId,
-        }))
-
-        const idx = Math.min(
-          saved.active ?? 0,
-          tabs.value.length - 1,
+        tabs.value = valid.map(({ serviceId, panelOpen, panelSize }) =>
+          createTab(
+            serviceId,
+            panelOpen === true,
+            typeof panelSize === 'number' && Number.isFinite(panelSize)
+              ? Math.min(
+                  MAX_PANEL_SIZE,
+                  Math.max(MIN_PANEL_SIZE, panelSize),
+                )
+              : DEFAULT_PANEL_SIZE,
+          ),
         )
+
+        const savedActive =
+          typeof saved.active === 'number' && Number.isInteger(saved.active)
+            ? saved.active
+            : 0
+        const idx = Math.min(Math.max(savedActive, 0), tabs.value.length - 1)
 
         activeId.value = tabs.value[idx].id
         nav.value = [activeId.value]
@@ -229,6 +267,11 @@ export const useTabs = defineStore('tabs', () => {
       [tabs, activeId],
       () =>
         setItem('tabs', {
+          tabs: tabs.value.map(({ serviceId, panelOpen, panelSize }) => ({
+            serviceId,
+            panelOpen,
+            panelSize,
+          })),
           serviceIds: tabs.value.map(
             (t) => t.serviceId,
           ),
@@ -250,6 +293,7 @@ export const useTabs = defineStore('tabs', () => {
     activeService,
     isSettings,
     panelOpen,
+    panelSize,
     canBack,
     canForward,
 
@@ -264,6 +308,7 @@ export const useTabs = defineStore('tabs', () => {
     close,
     closeForService,
     togglePanel,
+    setPanelSize,
     restore,
   }
 })

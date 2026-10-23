@@ -36,13 +36,14 @@ export const jellyfin = (c: ServiceConfig): ServiceAdapter => {
           const item = s.NowPlayingItem
           const pos = (s.PlayState?.PositionTicks ?? 0) / 1e7
           const total = (item.RunTimeTicks ?? 0) / 1e7
+          const progress = total > 0 ? Math.min(1, pos / total) : undefined
           return {
             id: s.Id,
             title: item.SeriesName ? `${item.SeriesName} - ${item.Name}` : item.Name,
             subtitle: t('jf.on', { user: s.UserName, device: s.DeviceName }),
             trailing: s.PlayState?.IsPaused ? t('common.paused') : fmtClock(pos),
             status: s.PlayState?.IsPaused ? 'idle' : 'up',
-            progress: total > 0 ? pos / total : undefined,
+            progress,
           }
         }),
       }

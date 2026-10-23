@@ -1,15 +1,18 @@
-
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { visualState } from '../lib/status'
+import { META } from '../services/registry'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
-import { t } from '../lib/i18n'
-import AppButton from './AppButton.vue'
-import AppIconButton from './AppIconButton.vue'
+import AppButton from './ui/AppButton.vue'
+import AppIconButton from './ui/AppIconButton.vue'
+import StatusDot from './ui/StatusDot.vue'
 
 const tabs = useTabs()
+const { t } = useI18n()
 const services = useServices()
 const snaps = useSnapshots()
 const ui = useUi()
@@ -17,8 +20,17 @@ const ui = useUi()
 const service = computed(() => tabs.activeService)
 const state = computed(() => snaps.stateOf(service.value?.id))
 const data = computed(() => state.value?.data)
+const health = computed(() => visualState(state.value))
+const serviceMeta = computed(() => service.value && META[service.value.type])
 
-const stars = [1, 2, 3, 4, 5]
+function itemStatusClass(status?: string) {
+  return {
+    'bg-ok': status === 'up',
+    'bg-bad': status === 'down',
+    'bg-warn': status === 'warn',
+    'bg-on-surface-variant/50': !status || status === 'idle',
+  }
+}
 
 const confirming = ref(false)
 let confirmTimer: ReturnType<typeof setTimeout> | undefined
@@ -29,237 +41,191 @@ function resetConfirmation() {
   confirmTimer = undefined
 }
 
-watch(
-  () => service.value?.id,
-  () => resetConfirmation(),
-)
+watch(() => service.value?.id, resetConfirmation)
 
-onUnmounted(() => {
-  clearTimeout(confirmTimer)
-})
+onUnmounted(() => clearTimeout(confirmTimer))
 
 function remove() {
-  const s = service.value
-  if (!s) return
+  const currentService = service.value
+  if (!currentService) return
 
   if (!confirming.value) {
     confirming.value = true
     clearTimeout(confirmTimer)
-
-    confirmTimer = setTimeout(() => {
-      confirming.value = false
-      confirmTimer = undefined
-    }, 4000)
-
+    confirmTimer = setTimeout(resetConfirmation, 4000)
     return
   }
 
-  clearTimeout(confirmTimer)
-  confirmTimer = undefined
-
-  tabs.closeForService(s.id)
-  services.remove(s.id)
-  ui.showToast(t('panel.removed', { name: s.name }))
-  confirming.value = false
+  resetConfirmation()
+  tabs.closeForService(currentService.id)
+  services.remove(currentService.id)
+  ui.showToast(t('panel.removed', { name: currentService.name }))
 }
 
-const dot = (status?: string) =>
-  ({
-    up: 'bg-ok',
-    down: 'bg-bad',
-    warn: 'bg-warn',
-    idle: 'bg-on-surface-variant/50',
-  })[status ?? 'idle']
+function refresh() {
+  if (service.value) void snaps.refresh(service.value.id)
+}
 </script>
 
 <template>
-  <Transition name="panel">
+  <Transition name="fade">
     <aside
       v-if="tabs.panelOpen && service"
-      class="w-80 shrink-0"
+      class="right-panel-container flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] bg-tertiary-container text-on-tertiary-container transition-colors duration-500"
       :aria-label="t('panel.aria')"
     >
-      <div
-        class="flex h-full w-80 flex-col gap-4 rounded-[28px] bg-tertiary-container p-5 text-on-tertiary-container transition-colors duration-500"
-      >
-        <!-- Cabeçalho -->
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
-            <h2 class="truncate text-xl font-semibold">
-              {{ data?.itemsTitle ?? t('panel.title') }}
-            </h2>
+      <header class="flex items-center gap-3 border-b border-on-tertiary-container/10 px-4 py-3">
+        <span
+          class="material-symbols-rounded grid size-10 shrink-0 place-items-center rounded-full bg-surface-container text-xl"
+          aria-hidden="true"
+        >
+          {{ serviceMeta?.icon }}
+        </span>
 
-            <p class="truncate text-sm opacity-75">
-              {{ service.name }}
-            </p>
+        <div class="min-w-0 flex-1">
+          <h2 class="truncate font-semibold">
+            {{ service.name }}
+          </h2>
+          <div class="flex items-center gap-1.5 text-sm opacity-75">
+            <StatusDot :state="health" />
+            <span>{{ t(`state.${health}`) }}</span>
           </div>
-
-          <AppIconButton
-            icon="close"
-            :label="t('panel.close')"
-            @click="tabs.togglePanel()"
-          />
         </div>
 
-        <!-- Lista de itens do serviço -->
-        <div
-          class="-mr-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-2"
-        >
-          <template v-if="data">
-            <!-- Estado vazio -->
-            <p
-              v-if="!data.items.length"
-              class="rounded-2xl bg-surface/60 p-4 text-sm"
-            >
-              {{ data.emptyText }}
-            </p>
+        <AppIconButton
+          icon="refresh"
+          :label="t('nav.refresh')"
+          :loading="state?.loading ?? true"
+          @click="refresh"
+        />
+        <AppIconButton
+          icon="close"
+          :label="t('panel.close')"
+          @click="tabs.togglePanel()"
+        />
+      </header>
 
-            <!-- Itens do serviço -->
-            <div
+      <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        <p
+          v-if="state?.error && data"
+          class="mb-3 rounded-xl bg-error-container px-3 py-2 text-sm text-on-error-container"
+          role="status"
+        >
+          {{ t('sv.stale') }}
+        </p>
+
+        <template v-if="data">
+          <h3 class="mb-2 text-sm font-medium text-on-surface-variant">
+            {{ data.itemsTitle }}
+          </h3>
+
+          <p
+            v-if="!data.items.length"
+            class="rounded-xl bg-surface-container px-3 py-4 text-sm text-on-surface-variant"
+          >
+            {{ data.emptyText }}
+          </p>
+
+          <ul v-else class="flex flex-col gap-2">
+            <li
               v-for="item in data.items"
               :key="item.id"
-              class="rounded-2xl bg-surface/70 p-3 text-on-surface"
+              class="right-panel-item flex min-w-0 items-center gap-3 rounded-xl bg-surface/70 p-3 text-on-surface"
             >
-              <div class="flex items-start gap-3">
-                <!-- Capa do álbum -->
-                <img
-                  v-if="item.imageUrl"
-                  :src="item.imageUrl"
-                  :alt="`Capa: ${item.title}`"
-                  loading="lazy"
-                  class="size-14 shrink-0 rounded-xl bg-surface-high object-cover"
-                />
+              <img
+                v-if="item.imageUrl"
+                :src="item.imageUrl"
+                :alt="`Capa: ${item.title}`"
+                loading="lazy"
+                class="right-panel-cover size-11 shrink-0 rounded-lg bg-surface-container object-cover"
+              />
+              <span
+                v-else
+                aria-hidden="true"
+                class="size-2.5 shrink-0 rounded-full"
+                :class="itemStatusClass(item.status)"
+              />
 
-                <!-- Indicador de status para itens sem capa -->
-                <span
-                  v-else
-                  class="mt-1.5 size-2.5 shrink-0 rounded-full"
-                  :class="dot(item.status)"
-                />
-
+              <div class="right-panel-item-content flex min-w-0 flex-1 items-center gap-2">
                 <div class="min-w-0 flex-1">
-                  <!-- Título e favorito -->
-                  <div class="flex items-start gap-1.5">
-                    <p
-                      class="min-w-0 flex-1 wrap-break-word text-sm leading-snug font-medium"
-                    >
-                      {{ item.title }}
-                    </p>
-
-                    <span
-                      v-if="item.favorite !== undefined"
-                      class="material-symbols-rounded shrink-0 text-lg leading-none"
-                      :class="
-                        item.favorite
-                          ? 'text-pink-500'
-                          : 'text-on-surface-variant/40'
-                      "
-                      :title="
-                        item.favorite ? 'Favorita' : 'Não favorita'
-                      "
-                      :aria-label="
-                        item.favorite ? 'Favorita' : 'Não favorita'
-                      "
-                    >{{ item.favorite ? 'favorite' : 'favorite_border' }}</span>
-                  </div>
-
-                  <!-- Artista e álbum -->
+                  <p class="truncate text-sm font-medium" :title="item.title">
+                    {{ item.title }}
+                  </p>
                   <p
                     v-if="item.subtitle"
-                    class="mt-0.5 wrap-break-word text-xs text-on-surface-variant"
+                    class="truncate text-xs text-on-surface-variant"
+                    :title="item.subtitle"
                   >
                     {{ item.subtitle }}
                   </p>
-
-                  <!-- Usuário ou informação adicional -->
-                  <p
-                    v-if="item.trailing"
-                    class="mt-1 truncate text-xs text-on-surface-variant"
-                  >
-                    {{ item.trailing }}
-                  </p>
-
-                  <!-- Avaliação: cinco estrelas preenchidas ou vazias -->
-                  <div
-                    v-if="item.rating != null"
-                    class="mt-1 flex items-center gap-0.5"
-                    :aria-label="`Avaliação: ${item.rating} de 5`"
-                    :title="`Avaliação: ${item.rating} de 5`"
-                  >
-                    <span
-                      v-for="star in stars"
-                      :key="star"
-                      aria-hidden="true"
-                      class="material-symbols-rounded text-base leading-none"
-                      :class="
-                        star <= item.rating
-                          ? 'text-amber-500'
-                          : 'text-on-surface-variant/35'
-                      "
-                    >{{ star <= item.rating ? 'star' : 'star_outline' }}</span>
-                  </div>
-
-                  <!-- Progresso, quando fornecido pelo adapter -->
-                  <div
+                  <m3e-linear-progress-indicator
                     v-if="item.progress != null"
-                    class="mt-2 h-1.5 overflow-hidden rounded-full bg-on-surface/10"
-                  >
-                    <div
-                      class="h-full rounded-full bg-primary"
-                      :style="{
-                        width: `${Math.min(100, item.progress * 100)}%`,
-                      }"
-                    />
-                  </div>
+                    class="mt-1 block"
+                    :value="Math.max(0, Math.min(100, item.progress * 100))"
+                    max="100"
+                    :aria-label="t('jf.progress', { value: Math.round(Math.max(0, Math.min(1, item.progress)) * 100) })"
+                    style="
+                      --m3e-linear-progress-indicator-thickness: 4px;
+                      --m3e-linear-progress-indicator-shape: 999px;
+                    "
+                  />
                 </div>
+
+                <span
+                  v-if="item.favorite"
+                  class="material-symbols-rounded shrink-0 text-base text-on-surface-variant"
+                  :aria-label="t('panel.favorite')"
+                >favorite</span>
+                <span
+                  v-if="item.rating != null"
+                  class="shrink-0 text-xs text-on-surface-variant"
+                  :aria-label="t('panel.rating', { rating: item.rating })"
+                >
+                  {{ item.rating }}/5
+                </span>
+                <span
+                  v-if="item.trailing"
+                  class="max-w-24 shrink-0 truncate text-xs text-on-surface-variant"
+                  :title="item.trailing"
+                >
+                  {{ item.trailing }}
+                </span>
               </div>
-            </div>
-          </template>
+            </li>
+          </ul>
+        </template>
 
-          <!-- Erro ao carregar dados -->
-          <p
-            v-else-if="state?.error"
-            class="rounded-2xl bg-surface/60 p-4 text-sm"
-          >
-            {{ t('panel.noData') }}
-          </p>
+        <p
+          v-else-if="state?.error"
+          class="rounded-xl bg-surface-container px-3 py-4 text-sm text-on-surface-variant"
+          role="alert"
+        >
+          {{ t('panel.noData') }}
+        </p>
 
-          <!-- Carregamento -->
-          <template v-else>
-            <div
-              v-for="n in 3"
-              :key="n"
-              class="h-16 animate-pulse rounded-2xl bg-surface/50"
-            />
-          </template>
-        </div>
-
-        <!-- Ações do serviço -->
-        <div class="flex gap-2">
-          <AppButton
-            class="min-w-0 flex-1"
-            variant="tonal"
-            icon="edit"
-            @click="ui.openModal(service.id)"
-          >
-            {{ t('common.edit') }}
-          </AppButton>
-
-          <AppButton
-            class="min-w-0 flex-1"
-            :variant="confirming ? 'filled' : 'tonal'"
-            :danger="confirming"
-            icon="delete"
-            @click="remove"
-          >
-            {{
-              confirming
-                ? t('common.confirm')
-                : t('common.remove')
-            }}
-          </AppButton>
+        <div v-else class="flex flex-col gap-3" :aria-label="t('common.loading')">
+          <div v-for="n in 4" :key="n" class="h-10 animate-pulse rounded-lg bg-surface-container" />
         </div>
       </div>
+
+      <footer class="flex gap-2 border-t border-on-tertiary-container/10 p-3">
+        <AppButton
+          class="min-w-0 flex-1"
+          icon="edit"
+          @click="ui.openModal(service.id)"
+        >
+          {{ t('common.edit') }}
+        </AppButton>
+        <AppButton
+          class="min-w-0 flex-1"
+          :variant="confirming ? 'filled' : 'outlined'"
+          :danger="confirming"
+          icon="delete"
+          @click="remove"
+        >
+          {{ confirming ? t('common.confirm') : t('common.remove') }}
+        </AppButton>
+      </footer>
     </aside>
   </Transition>
 </template>

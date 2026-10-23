@@ -1,6 +1,6 @@
-
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { META, SERVICE_TYPES, createAdapter } from '../services/registry'
 import type { ServiceConfig, ServiceType } from '../services/types'
 import { useServices } from '../stores/services'
@@ -8,9 +8,9 @@ import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { tintOn } from '../lib/status'
-import { t } from '../lib/i18n'
-import AppButton from './AppButton.vue'
+import AppButton from './ui/AppButton.vue'
 
+const { t } = useI18n()
 const ui = useUi()
 const services = useServices()
 const tabs = useTabs()
@@ -280,8 +280,7 @@ function save() {
 </script>
 
 <template>
-<m3e-dialog
-    ref="dialogRef"
+  <m3e-dialog
     :open="ui.modalOpen"
     dismissible
     :close-label="t('modal.cancel')"
@@ -359,7 +358,10 @@ function save() {
       </p>
 
       <!-- Nome -->
-      <m3e-form-field variant="outlined" class="w-full">
+      <m3e-form-field
+        variant="outlined"
+        class="w-full"
+      >
         <label slot="label" for="field-name">
           {{ t('modal.name') }}
         </label>
@@ -375,7 +377,10 @@ function save() {
       </m3e-form-field>
 
       <!-- Endereço -->
-      <m3e-form-field variant="outlined" class="w-full">
+      <m3e-form-field
+        variant="outlined"
+        class="w-full"
+      >
         <label slot="label" for="field-address">
           {{ t('modal.address') }}
         </label>
@@ -541,9 +546,14 @@ function save() {
       </p>
 
       <!-- Permite submeter com Enter -->
-      <button type="submit" tabindex="-1" aria-hidden="true" class="sr-only">
+      <m3e-button
+        type="submit"
+        tabindex="-1"
+        aria-hidden="true"
+        class="sr-only"
+      >
         {{ editing ? t('modal.save') : t('modal.add') }}
-      </button>
+      </m3e-button>
     </form>
 
     <!-- Ações fixadas no rodapé do diálogo -->

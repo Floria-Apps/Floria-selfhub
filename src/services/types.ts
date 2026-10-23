@@ -12,6 +12,8 @@ export interface ServiceConfig {
   slug?: string
   /** Aceitar certificado HTTPS autoassinado */
   insecure?: boolean
+  favorite?: boolean
+  group?: string
 }
 
 export type Tone = 'primary' | 'secondary' | 'tertiary' | 'neutral'

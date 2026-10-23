@@ -30,42 +30,58 @@
   --font-sans: "Roboto Flex Variable", "Roboto", system-ui, sans-serif;
 }
 
-/* Valores iniciais (claro). O JS troca tudo via applyTheme() */
 :root {
-  --md-primary: #6750a4;
-  --md-on-primary: #ffffff;
-  --md-primary-container: #eaddff;
-  --md-on-primary-container: #21005d;
-  --md-secondary: #625b71;
-  --md-secondary-container: #e8def8;
-  --md-on-secondary-container: #1d192b;
-  --md-tertiary: #7d5260;
-  --md-tertiary-container: #ffd8e4;
-  --md-on-tertiary-container: #31111d;
-  --md-error-container: #f9dedc;
-  --md-on-error-container: #410e0b;
-  --md-surface: #fef7ff;
-  --md-surface-container: #f3edf7;
-  --md-surface-high: #ece6f0;
-  --md-surface-highest: #e6e0e9;
-  --md-on-surface: #1d1b20;
-  --md-on-surface-variant: #49454f;
-  --md-outline-variant: #cac4d0;
-  --md-inverse-surface: #322f35;
-  --md-inverse-on-surface: #f5eff7;
-  --md-ok: #1f8a3b;
-  --md-warn: #b36b00;
-  --md-bad: #c62828;
+  color-scheme: light dark;
+}
+
+m3e-theme {
+  --md-primary: var(--md-sys-color-primary);
+  --md-on-primary: var(--md-sys-color-on-primary);
+  --md-primary-container: var(--md-sys-color-primary-container);
+  --md-on-primary-container: var(--md-sys-color-on-primary-container);
+  --md-secondary: var(--md-sys-color-secondary);
+  --md-secondary-container: var(--md-sys-color-secondary-container);
+  --md-on-secondary-container: var(--md-sys-color-on-secondary-container);
+  --md-tertiary: var(--md-sys-color-tertiary);
+  --md-tertiary-container: var(--md-sys-color-tertiary-container);
+  --md-on-tertiary-container: var(--md-sys-color-on-tertiary-container);
+  --md-error-container: var(--md-sys-color-error-container);
+  --md-on-error-container: var(--md-sys-color-on-error-container);
+  --md-surface: var(--md-sys-color-surface);
+  --md-surface-container: var(--md-sys-color-surface-container);
+  --md-surface-high: var(--md-sys-color-surface-container-high);
+  --md-surface-highest: var(--md-sys-color-surface-container-highest);
+  --md-on-surface: var(--md-sys-color-on-surface);
+  --md-on-surface-variant: var(--md-sys-color-on-surface-variant);
+  --md-outline-variant: var(--md-sys-color-outline-variant);
+  --md-inverse-surface: var(--md-sys-color-inverse-surface);
+  --md-inverse-on-surface: var(--md-sys-color-inverse-on-surface);
+  --md-ok: light-dark(#1f8a3b, #7ddc8f);
+  --md-warn: light-dark(#b36b00, #ffc85c);
+  --md-bad: light-dark(#c62828, #ff8f8a);
 }
 
 html, body, #app { height: 100%; }
 
 body {
-  background-color: var(--md-surface-container);
-  color: var(--md-on-surface);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+.tab-sidebar {
+  width: 16rem;
+}
+
+@media (max-width: 1000px) {
+  .tab-sidebar {
+    width: 13rem;
+  }
+}
+
+.app-toolbar.is-compact {
+  gap: 0;
+  padding-inline: 0.5rem;
 }
 
 /* Ícones Material Symbols */

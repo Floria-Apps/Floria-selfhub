@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
+import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import { getItem, setItem } from '../lib/storage'
-import { LOCALES, locale, type Locale } from '../lib/i18n'
-import { DEFAULT_SEED } from '../lib/theme'
+import { getSystemLocale, isDesktop, LOCALES, loadSystemLocale, locale, t, type Locale } from '../lib/i18n'
 
+const DEFAULT_SEED = '#6750a4'
 export type ThemeMode = 'auto' | 'light' | 'dark'
 export const THEME_MODES: ThemeMode[] = ['auto', 'light', 'dark']
 /** Segundos entre atualizações automáticas (0 = só manual) */
@@ -16,6 +18,7 @@ export interface Prefs {
   seedColor: string
   refreshSeconds: number
   hideAddresses: boolean
+  notificationsEnabled: boolean
 }
 
 export const useUi = defineStore('ui', () => {
@@ -24,6 +27,8 @@ export const useUi = defineStore('ui', () => {
   const seedColor = ref(DEFAULT_SEED)
   const refreshSeconds = ref(30)
   const hideAddresses = ref(false)
+  const notificationsEnabled = ref(false)
+  const startOnLogin = ref(false)
 
   const systemDark = ref(
     typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches,
@@ -43,6 +48,7 @@ export const useUi = defineStore('ui', () => {
     seedColor: seedColor.value,
     refreshSeconds: refreshSeconds.value,
     hideAddresses: hideAddresses.value,
+    notificationsEnabled: notificationsEnabled.value,
   })
 
   /** Aplica preferências vindas do disco ou de um arquivo importado, ignorando valores inválidos */
@@ -56,20 +62,71 @@ export const useUi = defineStore('ui', () => {
       seedColor.value = p.seedColor.toLowerCase()
     if (REFRESH_OPTIONS.includes(p.refreshSeconds as number)) refreshSeconds.value = p.refreshSeconds as number
     if (typeof p.hideAddresses === 'boolean') hideAddresses.value = p.hideAddresses
+    if (typeof p.notificationsEnabled === 'boolean') notificationsEnabled.value = p.notificationsEnabled
+  }
+
+  async function setNotificationsEnabled(enabled: boolean) {
+    if (!isDesktop) return
+
+    if (enabled) {
+      try {
+        const granted = await isPermissionGranted() || await requestPermission() === 'granted'
+        if (!granted) {
+          showToast(t('settings.notificationsPermissionDenied'), 'error')
+          return
+        }
+      } catch (error) {
+        console.error('Falha ao solicitar permissão para notificações', error)
+        showToast(t('settings.systemIntegrationError'), 'error')
+        return
+      }
+    }
+
+    notificationsEnabled.value = enabled
+  }
+
+  async function setStartOnLogin(enabled: boolean) {
+    if (!isDesktop) return
+
+    try {
+      if (enabled) await enable()
+      else await disable()
+      startOnLogin.value = enabled
+    } catch (error) {
+      console.error('Falha ao alterar a inicialização com o sistema', error)
+      showToast(t('settings.systemIntegrationError'), 'error')
+    }
   }
 
   async function load() {
+    locale.value = await loadSystemLocale()
     // Chaves da versão anterior (tema e idioma salvos separados)
     applyPrefs({
       mode: await getItem<unknown>('theme-mode', undefined),
       locale: await getItem<unknown>('locale', undefined),
     })
     applyPrefs(await getItem<unknown>('prefs', {}))
-    watch([mode, locale, dynamicColor, seedColor, refreshSeconds, hideAddresses], () => setItem('prefs', prefs()))
+    watch(
+      [mode, locale, dynamicColor, seedColor, refreshSeconds, hideAddresses, notificationsEnabled],
+      () => setItem('prefs', prefs()),
+    )
+    if (isDesktop) {
+      try {
+        startOnLogin.value = await isEnabled()
+        if (notificationsEnabled.value && !(await isPermissionGranted())) {
+          notificationsEnabled.value = false
+          showToast(t('settings.notificationsPermissionDenied'), 'error')
+        }
+      } catch (error) {
+        console.error('Falha ao carregar as integrações do sistema', error)
+        showToast(t('settings.systemIntegrationError'), 'error')
+      }
+    }
   }
 
   function resetPrefs() {
-    applyPrefs({ mode: 'auto', locale: 'en', dynamicColor: true, seedColor: DEFAULT_SEED, refreshSeconds: 30, hideAddresses: false })
+    applyPrefs({ mode: 'auto', locale: getSystemLocale(), dynamicColor: true, seedColor: DEFAULT_SEED, refreshSeconds: 30, hideAddresses: false })
+    notificationsEnabled.value = false
   }
 
   // Pede para a barra de pesquisa receber o foco (Ctrl/Cmd + L)
@@ -95,8 +152,9 @@ export const useUi = defineStore('ui', () => {
   }
 
   return {
-    mode, dynamicColor, seedColor, refreshSeconds, hideAddresses, isDark, omniboxTick, focusOmnibox,
+    mode, dynamicColor, seedColor, refreshSeconds, hideAddresses, notificationsEnabled, startOnLogin, isDark, omniboxTick, focusOmnibox,
     prefs, applyPrefs, load, resetPrefs,
+    setNotificationsEnabled, setStartOnLogin,
     modalOpen, editingId, openModal, closeModal, toast, showToast,
   }
 })

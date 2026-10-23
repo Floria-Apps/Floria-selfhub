@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { META } from '../services/registry'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
 import { SETTINGS_ID, useTabs } from '../stores/tabs'
 import { tintOn, visualState } from '../lib/status'
-import { t } from '../lib/i18n'
-import StatusDot from './StatusDot.vue'
-import AppButton from './AppButton.vue'
-import AppIconButton from './AppIconButton.vue'
+import StatusDot from './ui/StatusDot.vue'
+import AppButton from './ui/AppButton.vue'
+import AppIconButton from './ui/AppIconButton.vue'
 
 const tabs = useTabs()
+const { t } = useI18n()
 const services = useServices()
 const snaps = useSnapshots()
 
@@ -64,7 +65,7 @@ function moveDown(id: string) {
 
 <template>
   <aside
-    class="flex w-64 shrink-0 flex-col gap-1 rounded-[28px] bg-surface p-3 transition-colors duration-500"
+    class="tab-sidebar flex w-64 shrink-0 flex-col gap-1 rounded-[28px] bg-surface p-3 transition-colors duration-500"
     :aria-label="t('tab.list')"
   >
     <div
@@ -72,10 +73,13 @@ function moveDown(id: string) {
       class="flex items-center gap-3 px-2 pt-2 pb-3"
     >
       <span
-        aria-hidden="true"
-        class="material-symbols-rounded grid size-10 place-items-center rounded-2xl bg-primary text-[22px] text-on-primary"
+        class="grid size-10 shrink-0 place-items-center rounded-2xl bg-surface-high p-1.5"
       >
-        hub
+        <img
+          src="/selfhub.png"
+          alt=""
+          class="size-full object-contain"
+        />
       </span>
 
       <span class="min-w-0 flex-1 text-lg font-semibold tracking-tight">
@@ -83,8 +87,9 @@ function moveDown(id: string) {
       </span>
 
       <AppIconButton
-        :icon="editing ? 'check' : 'edit'"
-        :label="editing ? 'Concluir edição' : 'Editar abas'"
+        size="medium"
+        :icon="editing ? 'done' : 'reorder'"
+        :label="editing ? t('tab.finishOrganizing') : t('tab.organize')"
         :variant="editing ? 'tonal' : 'standard'"
         :pressed="editing"
         @click="toggleEditing"
@@ -151,7 +156,7 @@ function moveDown(id: string) {
             <AppIconButton
               size="extra-small"
               icon="keyboard_arrow_up"
-              label="Mover para cima"
+              :label="t('tab.moveUp')"
               :disabled="row.index === 0"
               @click.stop="moveUp(row.id)"
             />
@@ -159,7 +164,7 @@ function moveDown(id: string) {
             <AppIconButton
               size="extra-small"
               icon="keyboard_arrow_down"
-              label="Mover para baixo"
+              :label="t('tab.moveDown')"
               :disabled="row.index === rows.length - 1"
               @click.stop="moveDown(row.id)"
             />
@@ -191,25 +196,14 @@ function moveDown(id: string) {
     </AppButton>
 
 
-    <button
-      type="button"
-      class="mt-1 flex w-full items-center gap-3 rounded-full px-3 py-2 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-      :class="
-        tabs.isSettings
-          ? 'bg-secondary-container text-on-secondary-container'
-          : 'text-on-surface-variant hover:bg-surface-high'
-      "
+    <AppButton
+      class="mt-1 w-full justify-start"
+      :variant="tabs.isSettings ? 'tonal' : 'text'"
       :aria-current="tabs.isSettings ? 'page' : undefined"
+      icon="settings"
       @click="tabs.openSettings()"
     >
-      <span
-        aria-hidden="true"
-        class="material-symbols-rounded text-[20px]"
-      >
-        settings
-      </span>
-
       {{ t('settings.title') }}
-    </button>
+    </AppButton>
   </aside>
 </template>

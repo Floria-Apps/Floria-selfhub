@@ -1,4 +1,5 @@
 import type { ServiceConfig } from '../services/types'
+import type { ClientOptions } from '@tauri-apps/plugin-http'
 import { t } from './i18n'
 
 export const isTauri = () =>
@@ -42,10 +43,11 @@ export async function request(
 ): Promise<Response> {
   const url = cfg.baseUrl.replace(/\/+$/, '') + path
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 10_000)
+  const timeoutMs = opts.timeoutMs ?? 10_000
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const init: Record<string, unknown> = {
+    const init: RequestInit = {
       method: opts.method ?? 'GET',
       headers: opts.headers,
       body: opts.body,
@@ -54,10 +56,20 @@ export async function request(
     let res: Response
     if (isTauri()) {
       const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http')
-      if (cfg.insecure) init.danger = { acceptInvalidCerts: true, acceptInvalidHostnames: true }
-      res = await tauriFetch(url, init as RequestInit)
+      const nativeOptions: RequestInit & ClientOptions = {
+        ...init,
+        connectTimeout: timeoutMs,
+        maxRedirections: 5,
+      }
+      if (cfg.insecure) {
+        nativeOptions.danger = {
+          acceptInvalidCerts: true,
+          acceptInvalidHostnames: true,
+        }
+      }
+      res = await tauriFetch(url, nativeOptions)
     } else {
-      res = await fetch(url, init as RequestInit)
+      res = await fetch(url, init)
     }
     if (!res.ok) throw new HttpError(res.status, messageFor(res.status))
     return res
