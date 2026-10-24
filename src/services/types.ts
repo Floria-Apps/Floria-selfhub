@@ -1,4 +1,4 @@
-export type ServiceType = 'jellyfin' | 'navidrome' | 'kuma' | 'gatus' | 'speedtest' | 'cup' | 'wud' | 'adguard'
+export type ServiceType = 'jellyfin' | 'navidrome' | 'kuma' | 'gatus' | 'speedtest' | 'cup' | 'wud' | 'adguard' | 'multi-scrobbler'
 
 export interface ServiceConfig {
   id: string

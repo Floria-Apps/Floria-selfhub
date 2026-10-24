@@ -6,17 +6,18 @@ import { kuma } from './kuma'
 import { navidrome } from './navidrome'
 import { speedtest } from './speedtest'
 import { wud } from './wud'
+import { multiScrobbler } from './multi-scrobbler'
 import type { ServiceAdapter, ServiceConfig, ServiceMeta, ServiceType } from './types'
 
 export const SERVICE_TYPES: ServiceType[] = [
-  'jellyfin', 'navidrome', 'kuma', 'gatus', 'speedtest', 'cup', 'wud', 'adguard',
+  'jellyfin', 'navidrome', 'kuma', 'gatus', 'speedtest', 'cup', 'wud', 'adguard', 'multi-scrobbler',
 ]
 
 export const META: Record<ServiceType, ServiceMeta> = {
   jellyfin: {
     type: 'jellyfin',
     label: 'Jellyfin',
-    icon: 'movie',
+    icon: 'video_library',
     color: '#8b5cf6',
     description: 'meta.jellyfin.desc',
     urlPlaceholder: 'http://192.168.0.10:8096',
@@ -27,7 +28,7 @@ export const META: Record<ServiceType, ServiceMeta> = {
   navidrome: {
     type: 'navidrome',
     label: 'Navidrome',
-    icon: 'library_music',
+    icon: 'album',
     color: '#2f80ff',
     description: 'meta.navidrome.desc',
     urlPlaceholder: 'http://192.168.0.10:4533',
@@ -36,7 +37,7 @@ export const META: Record<ServiceType, ServiceMeta> = {
   kuma: {
     type: 'kuma',
     label: 'Uptime Kuma',
-    icon: 'monitor_heart',
+    icon: 'filter_tilt_shift',
     color: '#5cdd8b',
     description: 'meta.kuma.desc',
     urlPlaceholder: 'http://192.168.0.10:3001',
@@ -46,8 +47,8 @@ export const META: Record<ServiceType, ServiceMeta> = {
   gatus: {
     type: 'gatus',
     label: 'Gatus',
-    icon: 'vital_signs',
-    color: '#2563eb',
+    icon: 'settings_suggest',
+    color: '#5cdd8b',
     description: 'meta.gatus.desc',
     urlPlaceholder: 'http://192.168.0.10:8080',
     fields: [],
@@ -55,8 +56,8 @@ export const META: Record<ServiceType, ServiceMeta> = {
   speedtest: {
     type: 'speedtest',
     label: 'Speedtest Tracker',
-    icon: 'speed',
-    color: '#f58220',
+    icon: 'cruelty_free',
+    color: '#FF5E00',
     description: 'meta.speedtest.desc',
     urlPlaceholder: 'http://192.168.0.10:8765',
     fields: ['token'],
@@ -66,7 +67,7 @@ export const META: Record<ServiceType, ServiceMeta> = {
   cup: {
     type: 'cup',
     label: 'Cup',
-    icon: 'local_cafe',
+    icon: 'local_drink',
     color: '#64748b',
     description: 'meta.cup.desc',
     urlPlaceholder: 'http://192.168.0.10:8000',
@@ -82,10 +83,19 @@ export const META: Record<ServiceType, ServiceMeta> = {
     fields: ['username', 'password'],
     authOptional: true,
   },
+  'multi-scrobbler': {
+    type: 'multi-scrobbler',
+    label: 'Multi-Scrobbler',
+    icon: 'graphic_eq',
+    color: '#FF5E00',
+    description: 'meta.multiScrobbler.desc',
+    urlPlaceholder: 'https://scrobbler.example.com',
+    fields: [],
+  },
   adguard: {
     type: 'adguard',
     label: 'AdGuard Home',
-    icon: 'shield',
+    icon: 'verified_user',
     color: '#68bc71',
     description: 'meta.adguard.desc',
     urlPlaceholder: 'http://192.168.0.10:3000',
@@ -103,6 +113,7 @@ const FACTORIES: Record<ServiceType, (c: ServiceConfig) => ServiceAdapter> = {
   cup,
   wud,
   adguard,
+  'multi-scrobbler': multiScrobbler,
 }
 
 export const createAdapter = (c: ServiceConfig) => FACTORIES[c.type](c)

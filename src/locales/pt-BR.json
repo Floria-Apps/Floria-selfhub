@@ -255,5 +255,16 @@
   "notification.failed": "Não foi possível enviar a notificação de status.",
   "upd.notInUse": "sem uso",
   "nd.recent": "Tocados recentemente",
-  "nd.lastScan": "Última varredura {ago}"
+  "nd.lastScan": "Última varredura {ago}",
+  "clientSubtitle": "Destino de scrobbling",
+  "sourceSubtitle": "Fonte de reproduções",
+  "destinations": "Destinos",
+  "discovered": "Reproduções descobertas",
+  "queued": "Na fila",
+  "deadletter": "Falhas definitivas",
+  "sentShort": "enviadas",
+  "queuedShort": "na fila",
+  "discoveredShort": "descobertas",
+  "itemsTitle": "Fontes e destinos",
+  "empty": "Nenhuma fonte ou destino encontrado nas métricas."
 }

@@ -16,13 +16,19 @@ export interface ReqOptions {
 export function basicAuth(user: string, pass: string): string {
   const bytes = new TextEncoder().encode(`${user}:${pass}`)
   let bin = ''
+
   bytes.forEach((b) => (bin += String.fromCharCode(b)))
+
   return `Basic ${btoa(bin)}`
 }
 
 export class HttpError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message)
+    this.name = 'HttpError'
   }
 }
 
@@ -33,8 +39,11 @@ function messageFor(status: number) {
 }
 
 /**
- * No app Tauri, a requisição sai pelo Rust (plugin-http) e não sofre com CORS.
- * No navegador (npm run dev) usa o fetch normal, que depende do CORS do serviço.
+ * No app Tauri, a requisição sai pelo Rust (plugin-http)
+ * e não sofre com CORS.
+ *
+ * No navegador (npm run dev), usa fetch normal,
+ * que depende do CORS do serviço.
  */
 export async function request(
   cfg: Pick<ServiceConfig, 'baseUrl' | 'insecure'>,
@@ -71,12 +80,16 @@ export async function request(
     } else {
       res = await fetch(url, init)
     }
-    if (!res.ok) throw new HttpError(res.status, messageFor(res.status))
+    if (!res.ok) {
+      throw new HttpError(res.status, messageFor(res.status))
+    }
+
     return res
   } catch (e) {
     if (e instanceof HttpError) throw e
-    if ((e as Error).name === 'AbortError')
+    if ((e as Error).name === 'AbortError') {
       throw new Error(t('err.timeout'))
+    }
     throw new Error(t('err.connect'))
   } finally {
     clearTimeout(timer)
@@ -90,4 +103,17 @@ export async function getJson<T = any>(
 ): Promise<T> {
   const res = await request(cfg, path, opts)
   return (await res.json()) as T
+}
+
+/**
+ * Retorna a resposta HTTP como texto.
+ * Utilizado por endpoints como o Prometheus /api/metrics.
+ */
+export async function getText(
+  cfg: Pick<ServiceConfig, 'baseUrl' | 'insecure'>,
+  path: string,
+  opts: ReqOptions = {},
+): Promise<string> {
+  const res = await request(cfg, path, opts)
+  return await res.text()
 }

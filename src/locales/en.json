@@ -255,5 +255,17 @@
   "notification.failed": "Could not send a status notification.",
   "upd.notInUse": "not in use",
   "nd.recent": "Recently played",
-  "nd.lastScan": "Last scan {ago}"
+  "nd.lastScan": "Last scan {ago}",
+  "meta.multiScrobbler.desc": "Monitor scrobbling sources, destinations, and queues.",
+  "multiScrobbler.clientSubtitle": "Scrobbling destination",
+  "multiScrobbler.sourceSubtitle": "Playback source",
+  "multiScrobbler.destinations": "Destinations",
+  "multiScrobbler.discovered": "Discovered plays",
+  "multiScrobbler.queued": "Queued",
+  "multiScrobbler.deadletter": "Dead-letter plays",
+  "multiScrobbler.sentShort": "sent",
+  "multiScrobbler.queuedShort": "queued",
+  "multiScrobbler.discoveredShort": "discovered",
+  "multiScrobbler.itemsTitle": "Sources and destinations",
+  "multiScrobbler.empty": "No sources or destinations found in the metrics."
 }
