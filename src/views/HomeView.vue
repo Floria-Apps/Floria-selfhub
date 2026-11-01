@@ -203,11 +203,12 @@ function dropIntoSection(
             <m3e-button
               type="button"
               variant="text"
-              class="min-w-0 flex-1 text-left"
+              class="min-w-0 flex-1"
+              :class="tile.state === 'warn' ? 'text-center' : 'text-left'"
               @click="openService(tile.service.id)"
             >
-              <span class="block truncate font-medium">{{ serviceDisplayName(tile.service) }}</span>
-              <span class="block truncate text-sm opacity-85">
+              <span class="block truncate font-medium" :class="tile.state === 'warn' ? 'text-center' : 'text-left'">{{ serviceDisplayName(tile.service) }}</span>
+              <span class="block truncate text-sm opacity-85" :class="tile.state === 'warn' ? 'text-center' : 'text-left'">
                 {{ snaps.stateOf(tile.service.id)?.error || stateLabel(tile.state) }}
               </span>
             </m3e-button>

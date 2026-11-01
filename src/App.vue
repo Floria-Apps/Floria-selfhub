@@ -2,7 +2,14 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { M3eSplitPaneElement } from '@m3e/web/split-pane'
+interface M3eSplitPaneElement extends HTMLElement {
+  valueFormatter?: (value: number) => string
+  overshootLimit?: number
+  updateComplete?: Promise<boolean>
+  value: number
+  min?: string | number
+  max?: string | number
+}
 
 import { META } from './services/registry'
 import { locale } from './lib/i18n'

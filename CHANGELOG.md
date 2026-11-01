@@ -13,7 +13,7 @@ e este projeto adota [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Alterado
 - Suavizar cores chamativas na `HomeView.vue` (tons de superfície em vez de primário intenso)
-- Alinhar texto da seção de atenção à esquerda consistentemente
+- Melhorar alinhamento de texto na seção de atenção: centralizado para avisos e à esquerda para erros
 - Atualizar dependências:
   - `@tauri-apps/plugin-notification`: 2.7.0 → 2.8.0
   - `material-symbols`: 0.47.6 → 0.48.2
@@ -26,6 +26,7 @@ e este projeto adota [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 ### Corrigido
 - Layout do `RightPanel.vue` para permitir redimensionamento lateral fluido
 - Lista de itens do Cup com padding reduzido e truncamento adequado
+- Erro de tipo no `M3eSplitPaneElement` definindo interface local no `App.vue`
 
 ## [1.2.0] - 2026-XX-XX
 
