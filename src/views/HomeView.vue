@@ -145,7 +145,7 @@ function dropIntoSection(
   <div class="mx-auto max-w-5xl">
     <!-- Sem serviços -->
     <div v-if="services.ready && !tiles.length" class="mx-auto flex max-w-md flex-col items-center gap-5 py-16 text-center">
-      <span aria-hidden="true" class="material-symbols-rounded grid size-24 place-items-center rounded-full bg-primary-container text-[48px] text-on-primary-container">dns</span>
+      <span aria-hidden="true" class="material-symbols-rounded grid size-24 place-items-center rounded-full bg-surface-high text-[48px] text-on-surface-variant">dns</span>
       <div>
         <h1 class="text-3xl font-semibold tracking-tight">{{ t('home.emptyTitle') }}</h1>
         <p class="mt-2 text-on-surface-variant">{{ t('home.emptyText') }}</p>
@@ -237,7 +237,7 @@ function dropIntoSection(
           </span>
           <span
             v-if="dropTargetId === `section:${section.id}`"
-            class="ml-auto text-xs font-medium text-primary"
+            class="ml-auto text-xs font-medium text-on-surface-variant"
           >
             {{ t('home.dropToGroup', { group: section.label }) }}
           </span>
@@ -412,7 +412,7 @@ function dropIntoSection(
           @click="ui.openModal(null)"
         >
           <div slot="content" class="flex min-h-48 flex-col items-center justify-center gap-3">
-            <span aria-hidden="true" class="material-symbols-rounded grid size-12 place-items-center rounded-full bg-primary-container text-[26px] text-on-primary-container">add</span>
+            <span aria-hidden="true" class="material-symbols-rounded grid size-12 place-items-center rounded-full bg-surface-high text-[26px] text-on-surface-variant">add</span>
             <span class="font-medium">{{ t('service.add') }}</span>
           </div>
         </m3e-card>
