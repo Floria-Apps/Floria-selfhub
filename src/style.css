@@ -1,5 +1,12 @@
 @import "tailwindcss";
-@import "material-symbols/rounded.css" layer(base);
+
+@font-face {
+  font-family: "Material Symbols Rounded";
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url("./assets/material-symbols-rounded-subset.woff2") format("woff2");
+}
 
 @theme inline {
   --color-primary: var(--md-primary);
@@ -28,10 +35,6 @@
   --color-bad: var(--md-bad);
 
   --font-sans: "Roboto Flex Variable", "Roboto", system-ui, sans-serif;
-}
-
-:root {
-  color-scheme: light dark;
 }
 
 m3e-theme {
@@ -86,6 +89,10 @@ body {
 
 /* Ícones Material Symbols */
 .material-symbols-rounded {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  font-feature-settings: "liga";
   font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
   user-select: none;
   line-height: 1;

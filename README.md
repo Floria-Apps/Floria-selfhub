@@ -43,7 +43,9 @@ Instead of keeping dozens of browser tabs open for Jellyfin, Navidrome, Docker, 
 - **Unified dashboard** — access your self-hosted services from one application.
 - **Service integrations** — modular adapters make it easy to add new services.
 - **Service information** — view sessions, libraries, health, monitoring, DNS, and other service data.
+- **Status history** — highlight services needing attention and view recent availability and metric trends.
 - **Tabbed interface** — keep each service in its own workspace.
+- **Groups and shared ordering** — create service categories and keep service order consistent across the dashboard, settings, and sidebar.
 - **Dark & light mode** — switch between themes to match your setup.
 
 ## Supported Services

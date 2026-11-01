@@ -15,8 +15,8 @@ export interface Tab {
 export const SETTINGS_ID = '__settings__'
 
 const DEFAULT_PANEL_SIZE = 58
-const MIN_PANEL_SIZE = 45
-const MAX_PANEL_SIZE = 85
+const MIN_PANEL_SIZE = 35
+const MAX_PANEL_SIZE = 63
 
 interface StoredTab {
   serviceId: string | null
@@ -154,46 +154,38 @@ export const useTabs = defineStore('tabs', () => {
     tabs.value.splice(index + 1, 0, tab)
   }
 
+  function moveBefore(id: string, targetId: string) {
+    if (id === targetId) return
+    const index = tabs.value.findIndex((tab) => tab.id === id)
+    const targetIndex = tabs.value.findIndex((tab) => tab.id === targetId)
+    if (index < 0 || targetIndex < 0) return
+
+    const [tab] = tabs.value.splice(index, 1)
+    if (!tab) return
+    const adjustedTarget = tabs.value.findIndex((item) => item.id === targetId)
+    tabs.value.splice(adjustedTarget, 0, tab)
+  }
+
   function close(id: string) {
-    const i = tabs.value.findIndex(
-      (t) => t.id === id,
-    )
+    const index = tabs.value.findIndex((t) => t.id === id)
+    if (index === -1) return
 
-    if (i < 0) return
+    const isClosingActive = activeId.value === id
 
-    tabs.value.splice(i, 1)
+    tabs.value.splice(index, 1)
     nav.value = nav.value.filter((x) => x !== id)
 
     if (tabs.value.length === 0) {
-      const tab = createTab(null)
-
-      tabs.value.push(tab)
-      nav.value = [tab.id]
-      navIndex.value = 0
-      activeId.value = tab.id
-
+      openNewTab()
       return
     }
 
-    if (nav.value.length === 0) {
-      nav.value = [tabs.value[0].id]
-    }
-
-    navIndex.value = Math.min(
-      navIndex.value,
-      nav.value.length - 1,
-    )
-
-    if (activeId.value === id) {
-      activeId.value =
-        tabs.value[Math.max(0, i - 1)].id
-
-      nav.value = [
-        ...nav.value.slice(0, navIndex.value + 1),
-        activeId.value,
-      ]
-
-      navIndex.value = nav.value.length - 1
+    if (isClosingActive) {
+      const nextIndex = Math.max(0, index - 1)
+      activate(tabs.value[nextIndex].id)
+    } else {
+      // Ajusta o índice de navegação se necessário
+      navIndex.value = Math.min(navIndex.value, nav.value.length - 1)
     }
   }
 
@@ -302,6 +294,7 @@ export const useTabs = defineStore('tabs', () => {
     forward,
     moveUp,
     moveDown,
+    moveBefore,
     openNewTab,
     openService,
     openSettings,

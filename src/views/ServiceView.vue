@@ -7,10 +7,14 @@ import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { fmtAgo } from '../lib/format'
+import { serviceDisplayName } from '../lib/service'
 import { stateLabel, tintOn, visualState } from '../lib/status'
 import StatCard from '../components/ui/StatCard.vue'
 import StatusDot from '../components/ui/StatusDot.vue'
 import AppButton from '../components/ui/AppButton.vue'
+import AppCallout from '../components/ui/AppCallout.vue'
+import Skeleton from '../components/ui/Skeleton.vue'
+import ServiceHistory from '../components/ServiceHistory.vue'
 
 const props = defineProps<{ service: ServiceConfig }>()
 const { t } = useI18n()
@@ -26,7 +30,11 @@ const actions = computed(() => snaps.actionsFor(props.service.id))
 watch(
   () => props.service.id,
   (id) => {
-    if (!snaps.stateOf(id)?.data) snaps.refresh(id)
+    if (props.service.monitoringPaused) {
+      void snaps.loadActions(id)
+    } else if (!snaps.stateOf(id)?.data) {
+      snaps.refresh(id)
+    }
   },
   { immediate: true },
 )
@@ -41,14 +49,22 @@ watch(
       >{{ meta.icon }}</span>
 
       <div class="min-w-0 flex-1">
-        <h1 class="truncate text-3xl font-semibold tracking-tight">{{ service.name }}</h1>
+        <h1 class="truncate text-3xl font-semibold tracking-tight">{{ serviceDisplayName(service) }}</h1>
         <p class="truncate text-sm text-on-surface-variant">{{ ui.hideAddresses ? meta.label : t('sv.on', { type: meta.label, url: service.baseUrl }) }}</p>
       </div>
 
       <div class="flex flex-col items-end gap-1">
         <span class="flex items-center gap-2 rounded-full bg-surface-high px-4 py-1.5 text-sm font-medium">
-          <StatusDot :state="visual" />
-          {{ stateLabel(visual) }}
+          <template v-if="service.monitoringPaused">
+            <span aria-hidden="true" class="material-symbols-rounded text-base text-on-surface-variant">
+              pause_circle
+            </span>
+            {{ t('settings.monitoringPaused') }}
+          </template>
+          <template v-else>
+            <StatusDot :state="visual" />
+            {{ stateLabel(visual) }}
+          </template>
         </span>
         <span v-if="state?.updatedAt" class="text-xs text-on-surface-variant">
           {{ t('sv.updated', { ago: fmtAgo(state.updatedAt, snaps.now) }) }}
@@ -71,46 +87,71 @@ watch(
 
     </div>
 
+    <AppCallout
+      v-if="service.monitoringPaused"
+      class="mt-6"
+      variant="surface"
+      icon="pause_circle"
+      role="status"
+    >
+      {{ t('settings.monitoringPaused') }}
+    </AppCallout>
+
     <!-- Erro -->
-    <div
-      v-if="state?.error"
-      class="mt-6 flex flex-wrap items-center gap-4 rounded-3xl bg-error-container p-5 text-on-error-container"
+    <AppCallout
+      v-if="state?.error && !service.monitoringPaused"
+      class="mt-6"
+      variant="error"
+      icon="cloud_off"
+      :label="t('sv.errTitle')"
       role="alert"
     >
-      <span aria-hidden="true" class="material-symbols-rounded text-[32px]">cloud_off</span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold">{{ t('sv.errTitle') }}</p>
-        <p class="text-sm opacity-90">{{ state.error }}</p>
-        <p v-if="state.data" class="mt-1 text-xs opacity-80">{{ t('sv.stale') }}</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <AppButton
-          variant="text"
-          icon="edit"
-          @click="ui.openModal(service.id)"
-        >
-          {{ t('service.edit') }}
-        </AppButton>
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="min-w-0 flex-1">
+          <p>{{ state.error }}</p>
+          <p v-if="state.data" class="mt-1 text-xs opacity-80">{{ t('sv.stale') }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <AppButton
+            variant="text"
+            icon="edit"
+            @click="ui.openModal(service.id)"
+          >
+            {{ t('service.edit') }}
+          </AppButton>
 
-        <AppButton
-          variant="tonal"
-          icon="refresh"
-          @click="snaps.refresh(service.id)"
-        >
-          {{ t('sv.retry') }}
-        </AppButton>
+          <AppButton
+            variant="tonal"
+            icon="refresh"
+            @click="snaps.refresh(service.id)"
+          >
+            {{ t('sv.retry') }}
+          </AppButton>
+        </div>
       </div>
-    </div>
+    </AppCallout>
 
     <!-- Cards -->
     <div class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,200px),1fr))] gap-3">
       <template v-if="state?.data">
         <StatCard v-for="s in state.data.stats" :key="s.label" :stat="s" />
       </template>
-      <template v-else-if="!state?.error">
-        <div v-for="n in 4" :key="n" class="min-h-36 animate-pulse rounded-3xl bg-surface-high" />
+      <template v-else-if="!state?.error && !service.monitoringPaused">
+        <Skeleton
+          v-for="n in 4"
+          :key="n"
+          shape="rounded"
+          class="min-h-36 rounded-3xl"
+        >
+          <div class="min-h-36 w-full" />
+        </Skeleton>
       </template>
     </div>
+
+    <ServiceHistory
+      :samples="snaps.historyOf(service.id)"
+      :now="snaps.now"
+    />
 
     <p v-if="state?.data && !tabs.panelOpen" class="mt-6 text-sm text-on-surface-variant">
       {{ t('sv.panelHint', { title: state.data.itemsTitle }) }}

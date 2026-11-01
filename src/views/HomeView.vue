@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { META } from '../services/registry'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
+import { fmtAgo } from '../lib/format'
+import { serviceDisplayName } from '../lib/service'
 import { stateLabel, tintOn, visualState } from '../lib/status'
 import StatusDot from '../components/ui/StatusDot.vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppIconButton from '../components/ui/AppIconButton.vue'
+import AppCallout from '../components/ui/AppCallout.vue'
+import AvailabilityChart from '../components/AvailabilityChart.vue'
+import { buildAvailabilitySeries } from '../lib/history'
 
 const { t } = useI18n()
 const services = useServices()
@@ -17,6 +22,8 @@ const snaps = useSnapshots()
 const tabs = useTabs()
 const ui = useUi()
 let suppressCardClick = false
+const draggingServiceId = ref<string | null>(null)
+const dropTargetId = ref<string | null>(null)
 
 const tiles = computed(() =>
   services.list.map((s) => ({
@@ -32,40 +39,81 @@ const sections = computed(() => {
 
   for (const tile of tiles.value) {
     if (tile.service.favorite) continue
-    const group = tile.service.group?.trim() ?? ''
+    const groupName = tile.service.group?.trim() ?? ''
+    const group = services.groups.find((name) => name.toLowerCase() === groupName.toLowerCase()) ?? groupName
     const groupTiles = groups.get(group) ?? []
     groupTiles.push(tile)
     groups.set(group, groupTiles)
   }
 
+  const orderedGroups = services.groups.map((group) => {
+    const groupTiles = groups.get(group) ?? []
+    groups.delete(group)
+    return {
+      id: `group:${group}`,
+      label: group,
+      group,
+      favorite: false,
+      tiles: groupTiles,
+    }
+  })
+
+  const ungrouped = groups.get('') ?? []
   return [
     ...(favorites.length
       ? [{ id: 'favorites', label: t('home.favorites'), group: '', favorite: true, tiles: favorites }]
       : []),
-    ...[...groups].map(([group, groupTiles]) => ({
-      id: `group:${group}`,
-      label: group || t('home.group.other'),
-      group,
-      favorite: false,
-      tiles: groupTiles,
-    })),
+    ...orderedGroups,
+    ...(ungrouped.length
+      ? [{ id: 'group:', label: t('home.group.other'), group: '', favorite: false, tiles: ungrouped }]
+      : []),
   ]
 })
 
 const summary = computed(() => {
-  const total = tiles.value.length
+  const monitored = tiles.value.filter(({ service }) => !service.monitoringPaused)
+  const total = monitored.length
   if (!total) return ''
-  const ok = tiles.value.filter((x) => x.state === 'ok').length
+  const ok = monitored.filter((tile) => tile.state === 'ok').length
   return t('home.summary', { total, ok, count: total })
 })
 
+const attention = computed(() =>
+  tiles.value
+    .filter(({ service, state }) =>
+      !service.monitoringPaused && (state === 'bad' || state === 'warn'),
+    )
+    .sort((a, b) => (a.state === 'bad' ? 0 : 1) - (b.state === 'bad' ? 0 : 1)),
+)
+
+const availability = computed(() => {
+  return buildAvailabilitySeries(
+    services.list,
+    (id) => snaps.historyOf(id),
+    snaps.now,
+  )
+})
+
 function moveService(id: string, offset: -1 | 1) {
-  services.move(id, offset)
+  services.moveWithinGroup(id, offset)
 }
 
 function startDragging(id: string, event: DragEvent) {
+  draggingServiceId.value = id
+  dropTargetId.value = null
   event.dataTransfer?.setData('text/plain', id)
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+
+function dragOverTarget(id: string, event: DragEvent) {
+  event.preventDefault()
+  if (draggingServiceId.value !== id) dropTargetId.value = id
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+}
+
+function finishDragging() {
+  draggingServiceId.value = null
+  dropTargetId.value = null
 }
 
 function openService(id: string) {
@@ -84,7 +132,8 @@ function dropIntoSection(
   event: DragEvent,
 ) {
   const id = event.dataTransfer?.getData('text/plain')
-  if (!id) return
+  finishDragging()
+  if (!id || id === targetId) return
 
   suppressCardClick = true
   const sourceGroup = favorite && !group ? services.get(id)?.group ?? '' : group
@@ -116,23 +165,101 @@ function dropIntoSection(
       <h1 class="text-4xl font-semibold tracking-tight">{{ t('home.title') }}</h1>
       <p class="mt-1 text-on-surface-variant">{{ summary }}</p>
 
+      <AppCallout
+        class="mt-4"
+        variant="secondary"
+        icon="drag_indicator"
+        role="note"
+      >
+        {{ t('home.dragHint') }}
+      </AppCallout>
+
+      <section v-if="availability.length" class="mt-6" aria-labelledby="home-history-title">
+        <h2 id="home-history-title" class="mb-3 text-xl font-semibold tracking-tight">
+          {{ t('home.historyTitle') }}
+        </h2>
+        <AvailabilityChart
+          :title="t('home.availability')"
+          :points="availability"
+        />
+      </section>
+
+      <section v-if="attention.length" class="mt-6" aria-labelledby="home-attention-title">
+        <h2 id="home-attention-title" class="mb-3 flex items-center gap-2 text-xl font-semibold tracking-tight">
+          <span aria-hidden="true" class="material-symbols-rounded text-warn">error</span>
+          {{ t('home.attentionTitle') }}
+          <span class="rounded-full bg-surface-high px-2.5 py-0.5 text-xs text-on-surface-variant">
+            {{ attention.length }}
+          </span>
+        </h2>
+
+        <ul class="flex flex-col gap-2">
+          <li
+            v-for="tile in attention"
+            :key="tile.service.id"
+            class="flex min-w-0 items-center gap-3 rounded-2xl bg-surface-high p-3 text-on-surface-variant"
+          >
+            <StatusDot :state="tile.state" />
+            <m3e-button
+              type="button"
+              variant="text"
+              class="min-w-0 flex-1 text-left"
+              @click="openService(tile.service.id)"
+            >
+              <span class="block truncate font-medium">{{ serviceDisplayName(tile.service) }}</span>
+              <span class="block truncate text-sm opacity-85">
+                {{ snaps.stateOf(tile.service.id)?.error || stateLabel(tile.state) }}
+              </span>
+            </m3e-button>
+            <AppIconButton
+              icon="refresh"
+              :label="t('home.retryService', { name: serviceDisplayName(tile.service) })"
+              :loading="!!snaps.stateOf(tile.service.id)?.loading"
+              @click="snaps.refresh(tile.service.id)"
+            />
+          </li>
+        </ul>
+      </section>
+
       <section
         v-for="section in sections"
         :key="section.id"
         class="mt-8"
-        @dragover.prevent
+        @dragover="dragOverTarget(`section:${section.id}`, $event)"
         @drop="dropIntoSection(null, section.group, section.favorite, $event)"
       >
-        <h2 class="mb-3 text-xl font-semibold tracking-tight">
-          {{ section.label }}
-        </h2>
+        <div class="mb-3 flex items-center gap-2">
+          <h2 class="text-xl font-semibold tracking-tight">
+            {{ section.label }}
+          </h2>
+          <span class="rounded-full bg-surface-high px-2.5 py-0.5 text-xs text-on-surface-variant">
+            {{ section.tiles.length }}
+          </span>
+          <span
+            v-if="dropTargetId === `section:${section.id}`"
+            class="ml-auto text-xs font-medium text-primary"
+          >
+            {{ t('home.dropToGroup', { group: section.label }) }}
+          </span>
+        </div>
 
         <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-4">
+          <p
+            v-if="!section.tiles.length"
+            class="col-span-full rounded-2xl border border-dashed border-outline-variant p-5 text-sm text-on-surface-variant"
+          >
+            {{ t('home.groupDrop') }}
+          </p>
+
           <div
             v-for="tile in section.tiles"
             :key="tile.service.id"
             class="min-w-0"
-            @dragover.prevent
+            :class="{
+              'opacity-55': draggingServiceId === tile.service.id,
+              'rounded-[1.8rem] ring-2 ring-primary ring-offset-2 ring-offset-surface': dropTargetId === tile.service.id,
+            }"
+            @dragover.stop="dragOverTarget(tile.service.id, $event)"
             @drop.stop="dropIntoSection(tile.service.id, section.group, section.favorite, $event)"
           >
               <m3e-card
@@ -147,59 +274,130 @@ function dropIntoSection(
                 @pointerdown="suppressCardClick = false"
                 @click="openService(tile.service.id)"
               >
-              <div slot="content" class="flex min-h-48 flex-col justify-between gap-5 text-left">
-                <span aria-hidden="true"
-                  class="material-symbols-rounded grid size-14 place-items-center rounded-2xl text-[28px]"
-                  :style="{ background: tintOn(tile.meta.color, 40, 'var(--md-surface)'), color: tintOn(tile.meta.color, 75, 'var(--md-on-surface)') }"
-                >{{ tile.meta.icon }}</span>
-                <span class="min-w-0">
-                  <span class="block truncate text-xl font-semibold">{{ tile.service.name }}</span>
-                  <span v-if="!ui.hideAddresses" class="mt-0.5 block truncate text-sm text-on-surface-variant">{{ tile.service.baseUrl }}</span>
-                  <span v-else class="mt-0.5 flex items-center gap-1.5 truncate text-sm text-on-surface-variant">
-                    <span aria-hidden="true" class="material-symbols-rounded text-[16px]">visibility_off</span>
+              <div slot="content" class="flex min-h-48 flex-col gap-4 text-left">
+                <div class="flex min-w-0 items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    class="material-symbols-rounded grid size-12 shrink-0 place-items-center rounded-2xl text-[24px]"
+                    :style="{ background: tintOn(tile.meta.color, 40, 'var(--md-surface)'), color: tintOn(tile.meta.color, 75, 'var(--md-on-surface)') }"
+                  >{{ tile.meta.icon }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-lg font-semibold">{{ serviceDisplayName(tile.service) }}</span>
+                    <span class="block truncate text-xs text-on-surface-variant">{{ tile.meta.label }}</span>
+                  </span>
+                  <AppIconButton
+                    size="small"
+                    icon="drag_indicator"
+                    :label="t('home.dragHandle', { name: serviceDisplayName(tile.service) })"
+                    :draggable="true"
+                    class="-mr-2 -mt-2 cursor-grab active:cursor-grabbing"
+                    @click.stop
+                    @dragstart="startDragging(tile.service.id, $event)"
+                    @dragend="finishDragging"
+                  />
+                </div>
+
+                <div class="min-w-0 rounded-2xl bg-surface/70 px-3 py-2.5">
+                  <div class="flex items-center gap-2 text-sm font-medium">
+                    <template v-if="tile.service.monitoringPaused">
+                      <span
+                        aria-hidden="true"
+                        class="material-symbols-rounded text-base text-on-surface-variant"
+                      >pause_circle</span>
+                      {{ t('settings.monitoringPaused') }}
+                    </template>
+                    <template v-else>
+                      <StatusDot :state="tile.state" />
+                      {{ stateLabel(tile.state) }}
+                    </template>
+                  </div>
+                  <span
+                    v-if="!ui.hideAddresses"
+                    class="mt-1 block truncate text-xs text-on-surface-variant"
+                    :title="tile.service.baseUrl"
+                  >
+                    {{ tile.service.baseUrl }}
+                  </span>
+                  <span
+                    v-else
+                    class="mt-1 flex items-center gap-1 truncate text-xs text-on-surface-variant"
+                  >
+                    <span aria-hidden="true" class="material-symbols-rounded text-sm text-on-surface-variant">visibility_off</span>
                     {{ t('privacy.hidden') }}
                   </span>
-                </span>
-                <span class="flex items-center gap-2 text-sm font-medium">
-                  <StatusDot :state="tile.state" />
-                  {{ stateLabel(tile.state) }}
+                </div>
+
+                <div
+                  v-if="snaps.stateOf(tile.service.id)?.data?.stats.length"
+                  class="grid grid-cols-2 gap-2"
+                >
+                  <div
+                    v-for="stat in snaps.stateOf(tile.service.id)?.data?.stats.slice(0, 2)"
+                    :key="stat.label"
+                    class="min-w-0 rounded-xl bg-surface/60 px-3 py-2"
+                  >
+                    <span class="block truncate text-[11px] text-on-surface-variant">
+                      {{ stat.label }}
+                    </span>
+                    <span class="block truncate text-sm font-semibold">
+                      {{ stat.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <span class="mt-auto flex items-center justify-between gap-2 text-xs text-on-surface-variant">
+                  <span class="truncate">
+                    {{ snaps.stateOf(tile.service.id)?.updatedAt
+                      ? t('sv.updated', { ago: fmtAgo(snaps.stateOf(tile.service.id)?.updatedAt ?? 0, snaps.now) })
+                      : t('home.waitingForCheck') }}
+                  </span>
+                  <span
+                    v-if="dropTargetId === tile.service.id"
+                    class="shrink-0 font-medium text-primary"
+                  >
+                    {{ t('home.dropToReorder') }}
+                  </span>
                 </span>
               </div>
             </m3e-card>
 
-            <div class="mt-1 flex justify-end gap-1">
-              <AppButton
-                :variant="tile.service.favorite ? 'tonal' : 'text'"
-                size="extra-small"
-                :icon="tile.service.favorite ? 'star' : 'star_outline'"
-                @click="services.updateOrganization(tile.service.id, {
-                  favorite: !tile.service.favorite,
-                  group: tile.service.group,
-                })"
-              >
-                {{ tile.service.favorite ? t('home.unfavorite') : t('home.favorite') }}
-              </AppButton>
-              <AppIconButton
-                size="extra-small"
-                icon="drag_indicator"
-                :label="t('home.drag')"
-                :draggable="true"
-                @dragstart="startDragging(tile.service.id, $event)"
-              />
-              <AppIconButton
-                size="extra-small"
-                icon="keyboard_arrow_up"
-                :label="t('home.moveUp')"
-                :disabled="services.list.findIndex((service) => service.id === tile.service.id) === 0"
-                @click="moveService(tile.service.id, -1)"
-              />
-              <AppIconButton
-                size="extra-small"
-                icon="keyboard_arrow_down"
-                :label="t('home.moveDown')"
-                :disabled="services.list.findIndex((service) => service.id === tile.service.id) === services.list.length - 1"
-                @click="moveService(tile.service.id, 1)"
-              />
+            <div class="mt-1 flex flex-wrap items-center justify-between gap-1">
+              <span class="px-2 text-[11px] text-on-surface-variant">
+                {{ t('home.reorderHint') }}
+              </span>
+              <span class="flex gap-1">
+                <AppButton
+                  :variant="tile.service.favorite ? 'tonal' : 'text'"
+                  size="extra-small"
+                  :icon="tile.service.favorite ? 'star' : 'star_outline'"
+                  @click="services.updateOrganization(tile.service.id, {
+                    favorite: !tile.service.favorite,
+                    group: tile.service.group,
+                  })"
+                >
+                  {{ tile.service.favorite ? t('home.unfavorite') : t('home.favorite') }}
+                </AppButton>
+                <AppIconButton
+                  size="extra-small"
+                  icon="keyboard_arrow_up"
+                  :label="t('home.moveUp')"
+                  :disabled="!services.list.slice(0, services.list.findIndex((service) => service.id === tile.service.id)).some((service) =>
+                    service.favorite === tile.service.favorite
+                    && (tile.service.favorite || (service.group?.trim().toLowerCase() ?? '') === (tile.service.group?.trim().toLowerCase() ?? '')),
+                  )"
+                  @click="moveService(tile.service.id, -1)"
+                />
+                <AppIconButton
+                  size="extra-small"
+                  icon="keyboard_arrow_down"
+                  :label="t('home.moveDown')"
+                  :disabled="!services.list.slice(services.list.findIndex((service) => service.id === tile.service.id) + 1).some((service) =>
+                    service.favorite === tile.service.favorite
+                    && (tile.service.favorite || (service.group?.trim().toLowerCase() ?? '') === (tile.service.group?.trim().toLowerCase() ?? '')),
+                  )"
+                  @click="moveService(tile.service.id, 1)"
+                />
+              </span>
             </div>
           </div>
         </div>

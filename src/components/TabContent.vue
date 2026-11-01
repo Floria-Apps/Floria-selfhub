@@ -1,9 +1,11 @@
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import { useTabs } from '../stores/tabs'
-import HomeView from '../views/HomeView.vue'
-import SettingsView from '../views/SettingsView.vue'
-import ServiceView from '../views/ServiceView.vue'
+
+const HomeView = defineAsyncComponent(() => import('../views/HomeView.vue'))
+const SettingsView = defineAsyncComponent(() => import('../views/SettingsView.vue'))
+const ServiceView = defineAsyncComponent(() => import('../views/ServiceView.vue'))
 
 const tabs = useTabs()
 </script>

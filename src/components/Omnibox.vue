@@ -7,6 +7,7 @@ import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { hostOf } from '../lib/address'
+import { normalizeSearchText, serviceDisplayName } from '../lib/service'
 import { tintOn, visualState } from '../lib/status'
 import StatusDot from './ui/StatusDot.vue'
 
@@ -28,8 +29,8 @@ const current = computed(() => tabs.activeService)
 const closedLabel = computed(() => {
   if (current.value) {
     return ui.hideAddresses
-      ? current.value.name
-      : `${current.value.name} · ${hostOf(current.value.baseUrl)}`
+      ? serviceDisplayName(current.value)
+      : `${serviceDisplayName(current.value)} · ${hostOf(current.value.baseUrl)}`
   }
 
   return tabs.isSettings ? t('settings.title') : ''
@@ -37,14 +38,21 @@ const closedLabel = computed(() => {
 
 // Com endereços ocultos, a pesquisa não permite descobrir URLs.
 const matches = computed(() => {
-  const q = query.value.trim().toLowerCase()
+  const terms = normalizeSearchText(query.value.trim()).split(/\s+/).filter(Boolean)
 
   return services.list.filter((s) => {
-    const text = ui.hideAddresses
-      ? `${s.name} ${META[s.type].label}`
-      : `${s.name} ${s.baseUrl} ${META[s.type].label}`
+    const searchable = [
+      s.name,
+      s.alias,
+      META[s.type].label,
+      s.group,
+      ui.hideAddresses ? undefined : s.baseUrl,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .map(normalizeSearchText)
+      .join(' ')
 
-    return text.toLowerCase().includes(q)
+    return terms.every((term) => searchable.includes(term))
   })
 })
 
@@ -77,9 +85,9 @@ const actions = computed<Action[]>(() => {
     },
   ]
 
-  const q = query.value.trim().toLowerCase()
+  const q = normalizeSearchText(query.value.trim())
   return q
-    ? all.filter((action) => action.label.toLowerCase().includes(q))
+    ? all.filter((action) => normalizeSearchText(action.label).includes(q))
     : all
 })
 
@@ -303,10 +311,10 @@ const sectionTitle =
             {{ META[s.type].icon }}
           </span>
 
-          {{ s.name }}
+          {{ serviceDisplayName(s) }}
 
           <span slot="supporting-text">
-            {{ META[s.type].label }}
+            {{ [META[s.type].label, s.group].filter(Boolean).join(' · ') }}
           </span>
 
           <span slot="trailing" class="flex shrink-0 items-center gap-2">
@@ -316,7 +324,14 @@ const sectionTitle =
             >
               {{ hostOf(s.baseUrl) }}
             </span>
-            <StatusDot :state="visualState(snaps.stateOf(s.id))" />
+            <span
+              v-if="s.monitoringPaused"
+              class="material-symbols-rounded text-base text-on-surface-variant"
+              :aria-label="t('settings.monitoringPaused')"
+            >
+              pause_circle
+            </span>
+            <StatusDot v-else :state="visualState(snaps.stateOf(s.id))" />
           </span>
         </m3e-list-item>
       </div>
@@ -364,7 +379,7 @@ const sectionTitle =
 
     <!-- Nenhum resultado -->
     <p
-      v-if="!matches.length && query.trim()"
+      v-if="!matches.length && !actions.length && query.trim()"
       role="status"
       class="px-4 py-3 text-sm text-on-surface-variant"
     >

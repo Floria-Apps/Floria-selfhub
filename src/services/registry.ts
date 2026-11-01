@@ -1,16 +1,9 @@
-import { adguard } from './adguard'
-import { cup } from './cup'
-import { gatus } from './gatus'
-import { jellyfin } from './jellyfin'
-import { kuma } from './kuma'
-import { navidrome } from './navidrome'
-import { speedtest } from './speedtest'
-import { wud } from './wud'
-import { multiScrobbler } from './multi-scrobbler'
 import type { ServiceAdapter, ServiceConfig, ServiceMeta, ServiceType } from './types'
 
 export const SERVICE_TYPES: ServiceType[] = [
   'jellyfin', 'navidrome', 'kuma', 'gatus', 'speedtest', 'cup', 'wud', 'adguard', 'multi-scrobbler',
+  'sonarr', 'radarr', 'lidarr', 'readarr', 'prowlarr', 'bazarr',
+  'jellyseerr', 'qbittorrent', 'immich',
 ]
 
 export const META: Record<ServiceType, ServiceMeta> = {
@@ -102,18 +95,124 @@ export const META: Record<ServiceType, ServiceMeta> = {
     fields: ['username', 'password'],
     authOptional: true,
   },
+  sonarr: {
+    type: 'sonarr',
+    label: 'Sonarr',
+    icon: 'live_tv',
+    color: '#35c5f4',
+    description: 'meta.sonarr.desc',
+    urlPlaceholder: 'http://192.168.0.10:8989',
+    fields: ['token'],
+    tokenLabel: 'meta.arr.tokenLabel',
+    tokenHint: 'meta.arr.tokenHint',
+  },
+  radarr: {
+    type: 'radarr',
+    label: 'Radarr',
+    icon: 'movie',
+    color: '#ffc230',
+    description: 'meta.radarr.desc',
+    urlPlaceholder: 'http://192.168.0.10:7878',
+    fields: ['token'],
+    tokenLabel: 'meta.arr.tokenLabel',
+    tokenHint: 'meta.arr.tokenHint',
+  },
+  lidarr: {
+    type: 'lidarr',
+    label: 'Lidarr',
+    icon: 'album',
+    color: '#00a650',
+    description: 'meta.lidarr.desc',
+    urlPlaceholder: 'http://192.168.0.10:8686',
+    fields: ['token'],
+    tokenLabel: 'meta.arr.tokenLabel',
+    tokenHint: 'meta.arr.tokenHint',
+  },
+  readarr: {
+    type: 'readarr',
+    label: 'Readarr',
+    icon: 'menu_book',
+    color: '#665d5d',
+    description: 'meta.readarr.desc',
+    urlPlaceholder: 'http://192.168.0.10:8787',
+    fields: ['token'],
+    tokenLabel: 'meta.arr.tokenLabel',
+    tokenHint: 'meta.arr.tokenHint',
+  },
+  prowlarr: {
+    type: 'prowlarr',
+    label: 'Prowlarr',
+    icon: 'manage_search',
+    color: '#6f4aa8',
+    description: 'meta.prowlarr.desc',
+    urlPlaceholder: 'http://192.168.0.10:9696',
+    fields: ['token'],
+    tokenLabel: 'meta.arr.tokenLabel',
+    tokenHint: 'meta.arr.tokenHint',
+  },
+  bazarr: {
+    type: 'bazarr',
+    label: 'Bazarr',
+    icon: 'subtitles',
+    color: '#4e86a5',
+    description: 'meta.bazarr.desc',
+    urlPlaceholder: 'http://192.168.0.10:6767',
+    fields: ['token'],
+    tokenLabel: 'meta.arr.tokenLabel',
+    tokenHint: 'meta.arr.tokenHint',
+  },
+  jellyseerr: {
+    type: 'jellyseerr',
+    label: 'Jellyseerr',
+    icon: 'movie_filter',
+    color: '#7b5cff',
+    description: 'meta.jellyseerr.desc',
+    urlPlaceholder: 'http://192.168.0.10:5055',
+    fields: ['token'],
+    tokenLabel: 'meta.jellyseerr.tokenLabel',
+    tokenHint: 'meta.jellyseerr.tokenHint',
+  },
+  qbittorrent: {
+    type: 'qbittorrent',
+    label: 'qBittorrent',
+    icon: 'download',
+    color: '#2f67ba',
+    description: 'meta.qbittorrent.desc',
+    urlPlaceholder: 'http://192.168.0.10:8080',
+    fields: ['username', 'password'],
+  },
+  immich: {
+    type: 'immich',
+    label: 'Immich',
+    icon: 'photo_library',
+    color: '#4250af',
+    description: 'meta.immich.desc',
+    urlPlaceholder: 'http://192.168.0.10:2283',
+    fields: ['token'],
+    tokenLabel: 'meta.immich.tokenLabel',
+    tokenHint: 'meta.immich.tokenHint',
+  },
 }
 
-const FACTORIES: Record<ServiceType, (c: ServiceConfig) => ServiceAdapter> = {
-  jellyfin,
-  navidrome,
-  kuma,
-  gatus,
-  speedtest,
-  cup,
-  wud,
-  adguard,
-  'multi-scrobbler': multiScrobbler,
+const FACTORIES: Record<ServiceType, (c: ServiceConfig) => Promise<ServiceAdapter>> = {
+  jellyfin: async (c) => (await import('./jellyfin')).jellyfin(c),
+  navidrome: async (c) => (await import('./navidrome')).navidrome(c),
+  kuma: async (c) => (await import('./kuma')).kuma(c),
+  gatus: async (c) => (await import('./gatus')).gatus(c),
+  speedtest: async (c) => (await import('./speedtest')).speedtest(c),
+  cup: async (c) => (await import('./cup')).cup(c),
+  wud: async (c) => (await import('./wud')).wud(c),
+  adguard: async (c) => (await import('./adguard')).adguard(c),
+  'multi-scrobbler': async (c) => (await import('./multi-scrobbler')).multiScrobbler(c),
+  sonarr: async (c) => (await import('./arr')).arr(c),
+  radarr: async (c) => (await import('./arr')).arr(c),
+  lidarr: async (c) => (await import('./arr')).arr(c),
+  readarr: async (c) => (await import('./arr')).arr(c),
+  prowlarr: async (c) => (await import('./arr')).arr(c),
+  bazarr: async (c) => (await import('./arr')).arr(c),
+  jellyseerr: async (c) => (await import('./jellyseerr')).jellyseerr(c),
+  qbittorrent: async (c) => (await import('./qbittorrent')).qbittorrent(c),
+  immich: async (c) => (await import('./immich')).immich(c),
 }
 
-export const createAdapter = (c: ServiceConfig) => FACTORIES[c.type](c)
+export const createAdapter = async (c: ServiceConfig) => FACTORIES[c.type](c)

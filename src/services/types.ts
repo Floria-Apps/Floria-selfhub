@@ -1,9 +1,28 @@
-export type ServiceType = 'jellyfin' | 'navidrome' | 'kuma' | 'gatus' | 'speedtest' | 'cup' | 'wud' | 'adguard' | 'multi-scrobbler'
+export type ServiceType =
+  | 'jellyfin'
+  | 'navidrome'
+  | 'kuma'
+  | 'gatus'
+  | 'speedtest'
+  | 'cup'
+  | 'wud'
+  | 'adguard'
+  | 'multi-scrobbler'
+  | 'sonarr'
+  | 'radarr'
+  | 'lidarr'
+  | 'readarr'
+  | 'prowlarr'
+  | 'bazarr'
+  | 'jellyseerr'
+  | 'qbittorrent'
+  | 'immich'
 
 export interface ServiceConfig {
   id: string
   type: ServiceType
   name: string
+  alias?: string
   baseUrl: string
   token?: string
   username?: string
@@ -14,6 +33,7 @@ export interface ServiceConfig {
   insecure?: boolean
   favorite?: boolean
   group?: string
+  monitoringPaused?: boolean
 }
 
 export type Tone = 'primary' | 'secondary' | 'tertiary' | 'neutral'

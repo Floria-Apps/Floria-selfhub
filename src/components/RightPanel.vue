@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { visualState } from '../lib/status'
+import { serviceDisplayName } from '../lib/service'
 import { META } from '../services/registry'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
@@ -9,6 +10,8 @@ import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import AppButton from './ui/AppButton.vue'
 import AppIconButton from './ui/AppIconButton.vue'
+import AppCallout from './ui/AppCallout.vue'
+import Skeleton from './ui/Skeleton.vue'
 import StatusDot from './ui/StatusDot.vue'
 
 const tabs = useTabs()
@@ -59,7 +62,7 @@ function remove() {
   resetConfirmation()
   tabs.closeForService(currentService.id)
   services.remove(currentService.id)
-  ui.showToast(t('panel.removed', { name: currentService.name }))
+  ui.showToast(t('panel.removed', { name: serviceDisplayName(currentService) }))
 }
 
 function refresh() {
@@ -69,11 +72,11 @@ function refresh() {
 
 <template>
   <Transition name="fade">
-    <aside
-      v-if="tabs.panelOpen && service"
-      class="right-panel-container flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] bg-tertiary-container text-on-tertiary-container transition-colors duration-500"
-      :aria-label="t('panel.aria')"
-    >
+      <aside
+        v-if="tabs.panelOpen && service"
+        class="right-panel-container box-border flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[28px] bg-tertiary-container text-on-tertiary-container transition-colors duration-500"
+        :aria-label="t('panel.aria')"
+      >
       <header class="flex items-center gap-3 border-b border-on-tertiary-container/10 px-4 py-3">
         <span
           class="material-symbols-rounded grid size-10 shrink-0 place-items-center rounded-full bg-surface-container text-xl"
@@ -84,11 +87,19 @@ function refresh() {
 
         <div class="min-w-0 flex-1">
           <h2 class="truncate font-semibold">
-            {{ service.name }}
+            {{ serviceDisplayName(service) }}
           </h2>
           <div class="flex items-center gap-1.5 text-sm opacity-75">
-            <StatusDot :state="health" />
-            <span>{{ t(`state.${health}`) }}</span>
+            <template v-if="service.monitoringPaused">
+              <span aria-hidden="true" class="material-symbols-rounded text-base">
+                pause_circle
+              </span>
+              <span>{{ t('settings.monitoringPaused') }}</span>
+            </template>
+            <template v-else>
+              <StatusDot :state="health" />
+              <span>{{ t(`state.${health}`) }}</span>
+            </template>
           </div>
         </div>
 
@@ -106,13 +117,15 @@ function refresh() {
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        <p
-          v-if="state?.error && data"
-          class="mb-3 rounded-xl bg-error-container px-3 py-2 text-sm text-on-error-container"
+        <AppCallout
+          v-if="state?.error && data && !service.monitoringPaused"
+          class="mb-3"
+          variant="error"
+          icon="cloud_off"
           role="status"
         >
           {{ t('sv.stale') }}
-        </p>
+        </AppCallout>
 
         <template v-if="data">
           <h3 class="mb-2 text-sm font-medium text-on-surface-variant">
@@ -147,13 +160,13 @@ function refresh() {
               />
 
               <div class="right-panel-item-content flex min-w-0 flex-1 items-center gap-2">
-                <div class="min-w-0 flex-1">
+                 <div class="min-w-0 flex-1 overflow-hidden">
                   <p class="truncate text-sm font-medium" :title="item.title">
                     {{ item.title }}
                   </p>
                   <p
                     v-if="item.subtitle"
-                    class="truncate text-xs text-on-surface-variant"
+                    class="min-w-0 truncate text-xs text-on-surface-variant"
                     :title="item.subtitle"
                   >
                     {{ item.subtitle }}
@@ -185,7 +198,7 @@ function refresh() {
                 </span>
                 <span
                   v-if="item.trailing"
-                  class="max-w-24 shrink-0 truncate text-xs text-on-surface-variant"
+                  class="min-w-0 max-w-24 truncate text-xs text-on-surface-variant"
                   :title="item.trailing"
                 >
                   {{ item.trailing }}
@@ -195,16 +208,33 @@ function refresh() {
           </ul>
         </template>
 
-        <p
-          v-else-if="state?.error"
-          class="rounded-xl bg-surface-container px-3 py-4 text-sm text-on-surface-variant"
+        <AppCallout
+          v-else-if="service.monitoringPaused && !data"
+          variant="surface"
+          icon="pause_circle"
+          role="status"
+        >
+          {{ t('settings.monitoringPaused') }}
+        </AppCallout>
+
+        <AppCallout
+          v-else-if="state?.error && !service.monitoringPaused"
+          variant="error"
+          icon="cloud_off"
           role="alert"
         >
           {{ t('panel.noData') }}
-        </p>
+        </AppCallout>
 
         <div v-else class="flex flex-col gap-3" :aria-label="t('common.loading')">
-          <div v-for="n in 4" :key="n" class="h-10 animate-pulse rounded-lg bg-surface-container" />
+          <Skeleton
+            v-for="n in 4"
+            :key="n"
+            shape="rounded"
+            class="h-10 rounded-lg"
+          >
+            <div class="h-10 w-full" />
+          </Skeleton>
         </div>
       </div>
 

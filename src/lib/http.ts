@@ -9,6 +9,7 @@ export interface ReqOptions {
   method?: string
   headers?: Record<string, string>
   body?: string
+  credentials?: RequestCredentials
   timeoutMs?: number
 }
 
@@ -60,6 +61,7 @@ export async function request(
       method: opts.method ?? 'GET',
       headers: opts.headers,
       body: opts.body,
+      credentials: opts.credentials,
       signal: controller.signal,
     }
     let res: Response

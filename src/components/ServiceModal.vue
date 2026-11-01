@@ -3,12 +3,14 @@ import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { META, SERVICE_TYPES, createAdapter } from '../services/registry'
 import type { ServiceConfig, ServiceType } from '../services/types'
+import { serviceDisplayName } from '../lib/service'
 import { useServices } from '../stores/services'
 import { useSnapshots } from '../stores/snapshots'
 import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { tintOn } from '../lib/status'
 import AppButton from './ui/AppButton.vue'
+import AppCallout from './ui/AppCallout.vue'
 
 const { t } = useI18n()
 const ui = useUi()
@@ -21,6 +23,7 @@ type Form = Omit<ServiceConfig, 'id'>
 const blank = (): Form => ({
   type: 'jellyfin',
   name: '',
+  alias: '',
   baseUrl: '',
   token: '',
   username: '',
@@ -138,6 +141,7 @@ function normalize(): Form {
   const out: Form = {
     type: form.type,
     name,
+    alias: form.alias?.trim() || undefined,
     baseUrl: url.replace(/\/+$/, ''),
     insecure: form.insecure,
   }
@@ -219,10 +223,11 @@ async function test() {
   testing.value = true
 
   try {
-    const snap = await createAdapter({
+    const adapter = await createAdapter({
       ...data,
       id: 'test',
-    }).snapshot()
+    })
+    const snap = await adapter.snapshot()
 
     testResult.value = {
       ok: true,
@@ -254,6 +259,7 @@ function save() {
 
   if (editing.value) {
     services.update(editing.value.id, data)
+    void snaps.loadActions(editing.value.id)
     snaps.refresh(editing.value.id)
 
     pendingToast.value = {
@@ -268,7 +274,7 @@ function save() {
 
     pendingToast.value = {
       text: t('modal.added', {
-        name: created.name,
+        name: serviceDisplayName(created),
       }),
       kind: 'ok',
     }
@@ -374,6 +380,28 @@ function save() {
           autocomplete="off"
           @input="nameTouched = true"
         />
+      </m3e-form-field>
+
+      <!-- Apelido opcional para diferenciar instâncias do mesmo serviço -->
+      <m3e-form-field
+        variant="outlined"
+        class="w-full"
+      >
+        <label slot="label" for="field-alias">
+          {{ t('modal.alias') }}
+        </label>
+
+        <input
+          id="field-alias"
+          v-model="form.alias"
+          class="w-full min-w-0 bg-transparent text-sm text-on-surface outline-none"
+          :placeholder="t('modal.aliasPlaceholder')"
+          autocomplete="off"
+        />
+
+        <span slot="hint">
+          {{ t('modal.aliasHint') }}
+        </span>
       </m3e-form-field>
 
       <!-- Endereço -->
@@ -518,32 +546,24 @@ function save() {
       </label>
 
       <!-- Erro de validação -->
-      <p
+      <AppCallout
         v-if="formError"
-        class="rounded-2xl bg-error-container px-4 py-3 text-sm text-on-error-container"
+        variant="error"
+        icon="error"
         role="alert"
       >
         {{ formError }}
-      </p>
+      </AppCallout>
 
       <!-- Resultado do teste -->
-      <p
+      <AppCallout
         v-if="testResult"
-        class="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm"
-        :class="
-          testResult.ok
-            ? 'bg-primary-container text-on-primary-container'
-            : 'bg-error-container text-on-error-container'
-        "
+        :variant="testResult.ok ? 'primary' : 'error'"
+        :icon="testResult.ok ? 'check_circle' : 'error'"
         role="status"
       >
-        <span
-          aria-hidden="true"
-          class="material-symbols-rounded text-[20px] leading-none"
-        >{{ testResult.ok ? 'check_circle' : 'error' }}</span>
-
         {{ testResult.text }}
-      </p>
+      </AppCallout>
 
       <!-- Permite submeter com Enter -->
       <m3e-button
