@@ -22,7 +22,7 @@
     "@tauri-apps/plugin-os": "^2.4.0",
     "@tauri-apps/plugin-store": "^2.0.0",
     "js-md5": "^0.9.2",
-    "material-symbols": "^0.47.6",
+    "material-symbols": "^0.48.2",
     "pinia": "^4.0.3",
     "vue": "^3.5.0",
     "vue-i18n": "^11.4.16"
