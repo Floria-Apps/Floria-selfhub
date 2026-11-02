@@ -29,8 +29,8 @@ export async function getItem<T>(key: string, fallback: T): Promise<T> {
     }
     const raw = localStorage.getItem(`selfhub:${key}`)
     return raw ? (JSON.parse(raw) as T) : fallback
-  } catch (error) {
-    console.error(`Falha ao carregar ${key}`, error)
+  } catch {
+    console.error(`Falha ao carregar ${key}`)
     throw new Error(t('err.storageRead'))
   }
 }
@@ -44,8 +44,8 @@ export async function setItem(key: string, value: unknown): Promise<void> {
     } else {
       localStorage.setItem(`selfhub:${key}`, JSON.stringify(value))
     }
-  } catch (e) {
-    console.error('Falha ao salvar', key, e)
+  } catch {
+    console.error('Falha ao salvar', key)
     storageErrorReporter?.(new Error(t('err.storageWrite')))
   }
 }

@@ -48,8 +48,8 @@ export const useSnapshots = defineStore('snapshots', () => {
         title: t('notification.title'),
         body: t(healthy ? 'notification.recovered' : 'notification.issue', { name: serviceName }),
       })
-    } catch (error) {
-      console.error('Falha ao enviar notificação de status', error)
+    } catch {
+      console.error('Falha ao enviar notificação de status')
       ui.showToast(t('notification.failed'), 'error')
     }
   }
@@ -78,7 +78,7 @@ export const useSnapshots = defineStore('snapshots', () => {
     try {
       await adapterFor(config)
     } catch (error) {
-      console.error(`Falha ao carregar ações do serviço ${config.name}`, error)
+      console.error(`Falha ao carregar ações do serviço ${config.name}`)
       ui.showToast((error as Error).message, 'error')
     }
   }
@@ -184,8 +184,8 @@ export const useSnapshots = defineStore('snapshots', () => {
         saved,
         services.list.map((service) => service.id),
       )
-    } catch (error) {
-      console.error('Falha ao carregar o histórico de serviços', error)
+    } catch {
+      console.error('Falha ao carregar o histórico de serviços')
       ui.showToast(t('err.storageRead'), 'error')
     }
 

@@ -16,7 +16,7 @@ export function buildConfig(services: ServiceConfig[], prefs: Prefs, groups: str
   const file: ConfigFile = {
     app: 'selfhub',
     version: 1,
-    services: services.map(({ id: _id, ...rest }) => rest),
+    services: services.map(({ id: _id, token: _token, username: _username, password: _password, ...rest }) => rest),
     groups,
     prefs,
   }

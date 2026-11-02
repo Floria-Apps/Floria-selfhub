@@ -119,8 +119,8 @@ export const useUi = defineStore('ui', () => {
           showToast(t('settings.notificationsPermissionDenied'), 'error')
           return
         }
-      } catch (error) {
-        console.error('Falha ao solicitar permissão para notificações', error)
+      } catch {
+        console.error('Falha ao solicitar permissão para notificações')
         showToast(t('settings.systemIntegrationError'), 'error')
         return
       }
@@ -136,8 +136,8 @@ export const useUi = defineStore('ui', () => {
       if (enabled) await enable()
       else await disable()
       startOnLogin.value = enabled
-    } catch (error) {
-      console.error('Falha ao alterar a inicialização com o sistema', error)
+    } catch {
+      console.error('Falha ao alterar a inicialização com o sistema')
       showToast(t('settings.systemIntegrationError'), 'error')
     }
   }
@@ -165,8 +165,8 @@ export const useUi = defineStore('ui', () => {
           notificationsEnabled.value = false
           showToast(t('settings.notificationsPermissionDenied'), 'error')
         }
-      } catch (error) {
-        console.error('Falha ao carregar as integrações do sistema', error)
+      } catch {
+        console.error('Falha ao carregar as integrações do sistema')
         showToast(t('settings.systemIntegrationError'), 'error')
       }
     }

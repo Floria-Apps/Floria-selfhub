@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { parseConfig, serviceKey } from '../config'
+import { buildConfig, parseConfig, serviceKey } from '../config'
+
+describe('configuration export', () => {
+  it('omits service credentials from exported JSON', () => {
+    const json = buildConfig([{
+      id: 'service-id',
+      type: 'sonarr',
+      name: 'Sonarr',
+      baseUrl: 'http://sonarr.local',
+      token: 'secret-token',
+      username: 'private-user',
+      password: 'secret-password',
+    }], {} as never)
+
+    expect(json).not.toContain('secret-token')
+    expect(json).not.toContain('private-user')
+    expect(json).not.toContain('secret-password')
+    expect(JSON.parse(json).services[0]).not.toHaveProperty('token')
+    expect(JSON.parse(json).services[0]).not.toHaveProperty('username')
+    expect(JSON.parse(json).services[0]).not.toHaveProperty('password')
+  })
+})
 
 describe('configuration groups', () => {
   it('loads named groups while ignoring invalid and duplicate entries', () => {

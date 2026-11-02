@@ -129,8 +129,8 @@ async function initializeApp() {
     await tabs.restore()
 
     snaps.start()
-  } catch (error) {
-    console.error('Falha ao inicializar os dados locais', error)
+  } catch {
+    console.error('Falha ao inicializar os dados locais')
     ui.showToast(t('err.storageRead'), 'error')
   }
 }
