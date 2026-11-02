@@ -20,7 +20,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 12.14.0
+          version: 12.16.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -34,6 +34,11 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> Cargo.lock
+
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -42,7 +47,9 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             patchelf \
-            xdg-utils
+            xdg-utils \
+            libgtk-3-dev \
+            libssl-dev
 
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v1
@@ -62,6 +69,9 @@ jobs:
 
             ### Windows x86_64
             - Windows installer (.exe)
+
+            ### macOS
+            - macOS application bundle (.app)
           releaseDraft: false
           prerelease: false
 
@@ -76,7 +86,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 12.14.0
+          version: 12.16.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -90,12 +100,66 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> Cargo.lock
+
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: --bundles nsis
+          tagName: ${{ github.ref_name }}
+          releaseName: "Floria SelfHub ${{ github.ref_name }}"
+          releaseDraft: false
+          prerelease: false
+
+  macos:
+    name: macOS x86_64
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> Cargo.lock
+
+      - name: Install macOS dependencies
+        run: |
+          brew install --no-pin pkg-config
+          brew install --no-pin cairo
+          brew install --no-pin pango
+          brew install --no-pin atk
+          brew install --no-pin gtk3
+
+      - name: Build Tauri
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --bundles app,dmg
           tagName: ${{ github.ref_name }}
           releaseName: "Floria SelfHub ${{ github.ref_name }}"
           releaseDraft: false
