@@ -8,11 +8,10 @@ name: Release Please
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 jobs:
-  release:
-    name: Prepare release
+  release-please:
+    name: Release Please
     runs-on: ubuntu-latest
 
     steps:
@@ -20,38 +19,5 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v5
         with:
-          release-type: node
-          target-branch: main
-          path: .
-
-  release-please-rust:
-    name: Prepare Rust release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Release Please
-        id: release
-        uses: googleapis/release-please-action@v5
-        with:
-          release-type: rust
-          target-branch: main
-          path: src-tauri
-
-  release-please-github-actions:
-    name: Prepare GitHub Actions release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Release Please
-        id: release
-        uses: googleapis/release-please-action@v5
-        with:
-          release-type: github
-          target-branch: main
-          path: .
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
