@@ -148,11 +148,11 @@ jobs:
 
       - name: Install macOS dependencies
         run: |
-          brew install --no-pin pkg-config
-          brew install --no-pin cairo
-          brew install --no-pin pango
-          brew install --no-pin atk
-          brew install --no-pin gtk3
+          brew install pkg-config
+          brew install cairo
+          brew install pango
+          brew install atk
+          brew install gtk3
 
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v1
