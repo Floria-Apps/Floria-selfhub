@@ -5,6 +5,13 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adota [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.4.0](https://github.com/Floria-Apps/Floria-selfhub/compare/v1.3.0...v1.4.0) (2026-11-02)
+
+
+### Features
+
+* improve attention cards alignment, fix M3eSplitPaneElement type, and update v1.3.0 ([635c5b0](https://github.com/Floria-Apps/Floria-selfhub/commit/635c5b09139b361cd1942abea75560bbcd28b7de))
+
 ## [1.3.0] - 2026-11-01
 
 ### Adicionado
