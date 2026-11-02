@@ -208,14 +208,14 @@ function finishDragging() {
         class="grid size-10 shrink-0 place-items-center rounded-2xl bg-surface-high p-1.5"
       >
         <img
-          src="/selfhub.png"
+          src="/floria-selfhub.png"
           alt=""
           class="size-full object-contain"
         />
       </span>
 
       <span class="min-w-0 flex-1 text-lg font-semibold tracking-tight">
-        SelfHub
+        Floria SelfHub
       </span>
 
       <AppIconButton

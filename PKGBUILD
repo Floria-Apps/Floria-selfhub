@@ -37,19 +37,15 @@ makedepends=(
 
 source=(
   "selfhub-$pkgver.tar.gz::https://github.com/FloriaApps/Floria-selfhub/archive/refs/tags/v$pkgver.tar.gz"
-  'selfhub.png::https://raw.githubusercontent.com/FloriaApps/Floria-selfhub/main/src-tauri/icons/selfhub/64x64.png'
 )
 
-sha256sums=(
-  'SKIP'
-  'SKIP'
-)
+sha256sums=('SKIP')
 
 package() {
   install -Dm755 "$srcdir/selfhub-$pkgver/src-tauri/target/release/selfhub" \
     "$pkgdir/usr/bin/floria-selfhub"
 
-  install -Dm644 "$srcdir/selfhub.png" \
+  install -Dm644 "$srcdir/selfhub-$pkgver/src-tauri/icons/floria-selfhub/floria-selfhub-128.png" \
     "$pkgdir/usr/share/icons/hicolor/128x128/apps/floria-selfhub.png"
 
   install -Dm644 /dev/stdin \

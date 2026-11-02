@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Floria SelfHub
+Comment=Dashboard for self-hosted services
+Exec=selfhub
+Icon=floria-selfhub
+Terminal=false
+Categories=Utility;Network;
+StartupWMClass=dev.selfhub.app

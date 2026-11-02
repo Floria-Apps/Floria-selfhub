@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SelfHub",
+  "productName": "Floria SelfHub",
   "version": "1.4.1",
   "identifier": "dev.selfhub.app",
   "build": {
@@ -10,9 +10,10 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "enableGTKAppId": true,
     "windows": [
       {
-        "title": "SelfHub",
+        "title": "Floria SelfHub",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
@@ -26,12 +27,27 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "linux": {
+      "deb": {
+        "files": {
+          "linux/dev.selfhub.app.desktop": "/usr/share/applications/dev.selfhub.app.desktop",
+          "icons/floria-selfhub/icon.png": "/usr/share/icons/hicolor/512x512/apps/floria-selfhub.png"
+        }
+      },
+      "rpm": {
+        "files": {
+          "linux/dev.selfhub.app.desktop": "/usr/share/applications/dev.selfhub.app.desktop",
+          "icons/floria-selfhub/icon.png": "/usr/share/icons/hicolor/512x512/apps/floria-selfhub.png"
+        }
+      }
+    },
     "icon": [
-      "icons/selfhub/selfhub-32.png",
-      "icons/selfhub/selfhub-128.png",
-      "icons/selfhub/selfhub-256.png",
-      "icons/selfhub/selfhub.icns",
-      "icons/selfhub/selfhub.ico"
+      "icons/floria-selfhub/floria-selfhub-32.png",
+      "icons/floria-selfhub/floria-selfhub-128.png",
+      "icons/floria-selfhub/floria-selfhub-256.png",
+      "icons/floria-selfhub/icon.png",
+      "icons/floria-selfhub/floria-selfhub.icns",
+      "icons/floria-selfhub/floria-selfhub.ico"
     ]
   }
 }

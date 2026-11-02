@@ -1,4 +1,4 @@
-use tauri::Manager;
+use tauri::{image::Image, Manager};
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use tauri::{
@@ -42,13 +42,12 @@ pub fn run() {
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             {
-                let open = MenuItem::with_id(app, "open", "Open SelfHub", true, None::<&str>)?;
-                let quit = MenuItem::with_id(app, "quit", "Quit SelfHub", true, None::<&str>)?;
+                let open =
+                    MenuItem::with_id(app, "open", "Open Floria SelfHub", true, None::<&str>)?;
+                let quit =
+                    MenuItem::with_id(app, "quit", "Quit Floria SelfHub", true, None::<&str>)?;
                 let menu = Menu::with_items(app, &[&open, &quit])?;
-                let icon = app
-                    .default_window_icon()
-                    .ok_or("Default window icon is required for the system tray")?
-                    .clone();
+                let icon = Image::from_bytes(include_bytes!("../icons/floria-selfhub/64x64.png"))?;
 
                 TrayIconBuilder::new()
                     .icon(icon)
@@ -61,9 +60,19 @@ pub fn run() {
                     .build(app)?;
 
                 if let Some(window) = app.get_webview_window("main") {
-                    if std::env::args().any(|argument| argument == "--hidden") {
+                    let hidden = std::env::args().any(|argument| argument == "--hidden");
+                    let window_icon =
+                        Image::from_bytes(include_bytes!("../icons/floria-selfhub/icon.png"))?;
+                    window.set_icon(window_icon)?;
+                    window.set_skip_taskbar(false)?;
+
+                    if hidden {
                         window.hide()?;
+                    } else {
+                        window.show()?;
+                        window.set_focus()?;
                     }
+
                     let close_window = window.clone();
                     window.on_window_event(move |event| {
                         if let WindowEvent::CloseRequested { api, .. } = event {
