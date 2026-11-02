@@ -2,7 +2,7 @@
 # Contributor: talona <talona@example.com>
 
 pkgname=floria-selfhub
-pkgver=1.4.0
+pkgver=1.4.1
 pkgrel=1
 pkgdesc="Painel em abas para as APIs dos seus apps self-host"
 arch=('x86_64')

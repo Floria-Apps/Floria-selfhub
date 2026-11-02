@@ -1,6 +1,6 @@
 [package]
 name = "selfhub"
-version = "1.4.0"
+version = "1.4.1"
 description = "Painel em abas para as APIs dos seus apps self-host"
 edition = "2021"
 
