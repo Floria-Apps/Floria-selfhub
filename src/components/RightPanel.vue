@@ -12,7 +12,7 @@ import AppButton from './ui/AppButton.vue'
 import AppIconButton from './ui/AppIconButton.vue'
 import AppCallout from './ui/AppCallout.vue'
 import Skeleton from './ui/Skeleton.vue'
-import StatusDot from './ui/StatusDot.vue'
+import ServiceStatus from './ui/ServiceStatus.vue'
 
 const tabs = useTabs()
 const { t } = useI18n()
@@ -90,16 +90,7 @@ function refresh() {
             {{ serviceDisplayName(service) }}
           </h2>
           <div class="flex items-center gap-1.5 text-sm opacity-75">
-            <template v-if="service.monitoringPaused">
-              <span aria-hidden="true" class="material-symbols-rounded text-base">
-                pause_circle
-              </span>
-              <span>{{ t('settings.monitoringPaused') }}</span>
-            </template>
-            <template v-else>
-              <StatusDot :state="health" />
-              <span>{{ t(`state.${health}`) }}</span>
-            </template>
+            <ServiceStatus :state="health" :paused="service.monitoringPaused" />
           </div>
         </div>
 

@@ -1,24 +1,24 @@
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { VisualState } from '../../lib/status'
 
-defineProps<{
+withDefaults(defineProps<{
   state: VisualState
-}>()
+  decorative?: boolean
+}>(), {
+  decorative: false,
+})
 
-const labels: Record<VisualState, string> = {
-  ok: 'Online',
-  warn: 'Atenção',
-  bad: 'Offline',
-  loading: 'Carregando',
-}
+const { t } = useI18n()
 </script>
 
 <template>
   <m3e-badge
     size="small"
-    role="img"
-    :aria-label="labels[state]"
+    :role="decorative ? undefined : 'img'"
+    :aria-label="decorative ? undefined : t(`state.${state}`)"
+    :aria-hidden="decorative ? 'true' : undefined"
     :class="`status-${state}`"
   />
 </template>

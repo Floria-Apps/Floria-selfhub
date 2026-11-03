@@ -1,4 +1,5 @@
-use tauri::{image::Image, Manager};
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::{image::Image, Manager, State};
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use tauri::{
@@ -6,6 +7,11 @@ use tauri::{
     tray::TrayIconBuilder,
     WindowEvent,
 };
+
+#[tauri::command]
+fn set_close_to_tray(enabled: bool, close_to_tray: State<'_, AtomicBool>) {
+    close_to_tray.store(enabled, Ordering::Relaxed);
+}
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn show_main_window(app: &tauri::AppHandle) {
@@ -39,6 +45,8 @@ pub fn run() {
     }
 
     builder
+        .manage(AtomicBool::new(true))
+        .invoke_handler(tauri::generate_handler![set_close_to_tray])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             {
@@ -74,11 +82,16 @@ pub fn run() {
                     }
 
                     let close_window = window.clone();
+                    let app_handle = app.handle().clone();
                     window.on_window_event(move |event| {
                         if let WindowEvent::CloseRequested { api, .. } = event {
-                            api.prevent_close();
-                            if let Err(error) = close_window.hide() {
-                                eprintln!("Não foi possível ocultar a janela do SelfHub: {error}");
+                            if app_handle.state::<AtomicBool>().load(Ordering::Relaxed) {
+                                api.prevent_close();
+                                if let Err(error) = close_window.hide() {
+                                    eprintln!(
+                                        "Não foi possível ocultar a janela do SelfHub: {error}"
+                                    );
+                                }
                             }
                         }
                     });

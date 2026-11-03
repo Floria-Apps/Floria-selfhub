@@ -49,6 +49,30 @@ describe('UI language preference', () => {
     expect(ui.prefs().locale).toBe('auto')
   })
 
+  it('persists the close-to-tray preference and restores its default when reset', () => {
+    const ui = useUi()
+
+    expect(ui.closeToTray).toBe(true)
+    ui.applyPrefs({ closeToTray: false })
+    expect(ui.closeToTray).toBe(false)
+    expect(ui.prefs().closeToTray).toBe(false)
+
+    ui.resetPrefs()
+    expect(ui.closeToTray).toBe(true)
+  })
+
+  it('persists the tips preference and restores its default when reset', () => {
+    const ui = useUi()
+
+    expect(ui.showTips).toBe(true)
+    ui.applyPrefs({ showTips: false })
+    expect(ui.showTips).toBe(false)
+    expect(ui.prefs().showTips).toBe(false)
+
+    ui.resetPrefs()
+    expect(ui.showTips).toBe(true)
+  })
+
   it('applies, validates and resets M3E appearance preferences', () => {
     const ui = useUi()
 

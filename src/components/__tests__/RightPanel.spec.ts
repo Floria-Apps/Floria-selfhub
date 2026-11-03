@@ -31,7 +31,10 @@ vi.mock('../../stores/tabs', () => ({
 vi.mock('../../stores/snapshots', () => ({
   useSnapshots: () => ({
     stateOf: () => ({
+      loading: false,
       data: {
+        health: 'warn',
+        stats: [],
         itemsTitle: 'Imagens',
         items: [
           { id: '1', title: 'mysql:8.2', subtitle: '8.2 para 26.10', trailing: 'Major', status: 'warn' }
@@ -57,11 +60,15 @@ describe('RightPanel.vue', () => {
     return mount(RightPanel, {
       global: {
         plugins: [i18n],
-        config: {
-          compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith('m3e-')
-          }
-        }
+        stubs: {
+          'm3e-badge': true,
+          'm3e-button': true,
+          'm3e-icon': true,
+          'm3e-icon-button': true,
+          'm3e-linear-progress-indicator': true,
+          'm3e-loading-indicator': true,
+          'm3e-tooltip': true,
+        },
       }
     })
   }
@@ -73,6 +80,7 @@ describe('RightPanel.vue', () => {
 
     // Verificamos apenas se a tag existe, o que confirma que o componente carregou
     expect(wrapper.find('ul').exists()).toBe(true)
+    expect(wrapper.text()).toContain('warn')
   })
 
   it('verifica se o trailing item existe', () => {

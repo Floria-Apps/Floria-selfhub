@@ -8,9 +8,9 @@ import { useTabs } from '../stores/tabs'
 import { useUi } from '../stores/ui'
 import { fmtAgo } from '../lib/format'
 import { serviceDisplayName } from '../lib/service'
-import { stateLabel, tintOn, visualState } from '../lib/status'
+import { tintOn, visualState } from '../lib/status'
 import StatCard from '../components/ui/StatCard.vue'
-import StatusDot from '../components/ui/StatusDot.vue'
+import ServiceStatus from '../components/ui/ServiceStatus.vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppCallout from '../components/ui/AppCallout.vue'
 import Skeleton from '../components/ui/Skeleton.vue'
@@ -54,18 +54,11 @@ watch(
       </div>
 
       <div class="flex flex-col items-end gap-1">
-        <span class="flex items-center gap-2 rounded-full bg-surface-high px-4 py-1.5 text-sm font-medium">
-          <template v-if="service.monitoringPaused">
-            <span aria-hidden="true" class="material-symbols-rounded text-base text-on-surface-variant">
-              pause_circle
-            </span>
-            {{ t('settings.monitoringPaused') }}
-          </template>
-          <template v-else>
-            <StatusDot :state="visual" />
-            {{ stateLabel(visual) }}
-          </template>
-        </span>
+        <ServiceStatus
+          :state="visual"
+          :paused="service.monitoringPaused"
+          class="rounded-full bg-surface-high px-4 py-1.5 text-sm font-medium"
+        />
         <span v-if="state?.updatedAt" class="text-xs text-on-surface-variant">
           {{ t('sv.updated', { ago: fmtAgo(state.updatedAt, snaps.now) }) }}
         </span>
@@ -153,7 +146,7 @@ watch(
       :now="snaps.now"
     />
 
-    <p v-if="state?.data && !tabs.panelOpen" class="mt-6 text-sm text-on-surface-variant">
+    <p v-if="ui.showTips && state?.data && !tabs.panelOpen" class="mt-6 text-sm text-on-surface-variant">
       {{ t('sv.panelHint', { title: state.data.itemsTitle }) }}
     </p>
   </div>

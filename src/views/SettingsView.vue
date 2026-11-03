@@ -1,12 +1,13 @@
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import pkg from '../../package.json'
 import { buildConfig, copyText, parseConfig, serviceKey } from '../lib/config'
 import { serviceDisplayName } from '../lib/service'
 import { isDesktop, LOCALES, localeName } from '../lib/i18n'
 import { tintOn } from '../lib/status'
+import { fetchLatestReleaseVersion, isNewerVersion } from '../lib/updates'
 import { META } from '../services/registry'
 import type { ServiceConfig } from '../services/types'
 import { useServices } from '../stores/services'
@@ -26,6 +27,38 @@ const ui = useUi()
 const services = useServices()
 const tabs = useTabs()
 const snaps = useSnapshots()
+
+const updateCheck = ref<'idle' | 'checking' | 'up-to-date' | 'outdated' | 'error'>('idle')
+const latestVersion = ref('')
+
+async function openExternal(url: string) {
+  try {
+    if (isDesktop) {
+      const { openUrl } = await import('@tauri-apps/plugin-opener')
+      await openUrl(url)
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  } catch {
+    ui.showToast(t('settings.aboutLinkError'), 'error')
+  }
+}
+
+async function checkForUpdates() {
+  if (updateCheck.value === 'checking') return
+  updateCheck.value = 'checking'
+
+  try {
+    latestVersion.value = await fetchLatestReleaseVersion()
+    updateCheck.value = isNewerVersion(latestVersion.value, pkg.version) ? 'outdated' : 'up-to-date'
+  } catch {
+    updateCheck.value = 'error'
+  }
+}
+
+onMounted(() => {
+  void checkForUpdates()
+})
 
 const contrastOptions = computed(() =>
   THEME_CONTRASTS.map((level) => ({
@@ -57,6 +90,22 @@ const refreshOptions = computed(() =>
 )
 
 const setLocale = (language: LocalePreference) => ui.setLanguagePreference(language)
+
+const settingsNavItems = computed(() => {
+  const sections = [
+    { id: 'settings-appearance', key: 'settings.appearance' },
+    { id: 'settings-language', key: 'settings.language' },
+    { id: 'settings-privacy', key: 'privacy.title' },
+    { id: 'settings-behavior', key: 'settings.behavior' },
+    ...(isDesktop ? [{ id: 'settings-system', key: 'settings.system' }] : []),
+    { id: 'settings-groups', key: 'settings.groups' },
+    { id: 'settings-services', key: 'settings.services' },
+    { id: 'settings-data', key: 'settings.data' },
+    { id: 'settings-about', key: 'settings.about' },
+  ]
+
+  return sections.map(({ id, key }) => ({ id, label: t(key) }))
+})
 
 const isCustomSeed = computed(
   () => !THEME_SEEDS.some((seed) => seed.color === ui.seedColor),
@@ -245,6 +294,22 @@ function importConfig() {
       </h1>
     </header>
 
+    <div class="sticky -top-8 z-10 -mx-8 bg-surface px-8 py-2">
+      <nav
+        :aria-label="t('settings.quickNav')"
+        class="flex gap-2 overflow-x-auto rounded-2xl bg-surface-container p-2"
+      >
+        <a
+          v-for="item in settingsNavItems"
+          :key="item.id"
+          :href="`#${item.id}`"
+          class="shrink-0 rounded-full px-3 py-2 text-sm text-on-surface-variant transition-colors hover:bg-surface-high hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          {{ item.label }}
+        </a>
+      </nav>
+    </div>
+
     <!-- Aparência -->
     <SettingsSection id="settings-appearance" :title="t('settings.appearance')" icon="palette">
       <div>
@@ -379,12 +444,23 @@ function importConfig() {
         <SettingRow
           :title="t('settings.refresh')"
           :description="t('settings.refreshDesc')"
+          divider
         >
           <Segmented
             :options="refreshOptions"
             :model-value="ui.refreshSeconds"
             :label="t('settings.refresh')"
             @update:model-value="ui.refreshSeconds = $event"
+          />
+        </SettingRow>
+
+        <SettingRow
+          :title="t('settings.showTips')"
+          :description="t('settings.showTipsDesc')"
+        >
+          <Switch
+            v-model="ui.showTips"
+            :label="t('settings.showTips')"
           />
         </SettingRow>
       </div>
@@ -425,7 +501,12 @@ function importConfig() {
         <SettingRow
           :title="t('settings.tray')"
           :description="t('settings.trayDesc')"
-        />
+        >
+          <Switch
+            v-model="ui.closeToTray"
+            :label="t('settings.tray')"
+          />
+        </SettingRow>
       </div>
     </SettingsSection>
 
@@ -767,9 +848,133 @@ function importConfig() {
 
     <!-- Sobre -->
     <SettingsSection id="settings-about" :title="t('settings.about')" icon="info">
-      <p class="mt-2 text-sm text-on-surface-variant">
-        {{ t('settings.aboutText', { version: pkg.version }) }}
-      </p>
+      <div class="mt-2 flex flex-col gap-5">
+        <div class="flex items-center gap-4">
+          <img
+            src="/floria-selfhub.png"
+            :alt="t('settings.aboutLogoAlt')"
+            class="size-16 shrink-0 rounded-2xl"
+          />
+          <div class="min-w-0">
+            <h3 class="text-lg font-semibold">Floria SelfHub</h3>
+            <p class="text-sm text-on-surface-variant">
+              {{ t('settings.aboutVersion', { version: pkg.version }) }}
+            </p>
+            <p class="mt-1 text-sm text-on-surface-variant">
+              {{ t('settings.aboutTagline') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-surface-container p-4" aria-live="polite">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm text-on-surface-variant">
+              <template v-if="updateCheck === 'checking'">{{ t('settings.aboutCheckingUpdates') }}</template>
+              <template v-else-if="updateCheck === 'up-to-date'">{{ t('settings.aboutUpToDate', { version: pkg.version }) }}</template>
+              <template v-else-if="updateCheck === 'outdated'">{{ t('settings.aboutUpdateAvailable', { version: latestVersion }) }}</template>
+              <template v-else-if="updateCheck === 'error'">{{ t('settings.aboutUpdateCheckFailed') }}</template>
+              <template v-else>{{ t('settings.aboutUpdateCheckPrompt') }}</template>
+            </p>
+            <AppButton
+              v-if="updateCheck !== 'outdated'"
+              variant="outlined"
+              :loading="updateCheck === 'checking'"
+              @click="checkForUpdates"
+            >
+              {{ t('settings.aboutCheckUpdates') }}
+            </AppButton>
+            <AppButton
+              v-else
+              variant="filled"
+              @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/releases/latest')"
+            >
+              {{ t('settings.aboutDownloadUpdate') }}
+            </AppButton>
+          </div>
+        </div>
+
+        <p class="text-sm text-on-surface-variant">
+          {{ t('settings.aboutPrivacy') }}
+        </p>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-primary hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub')"
+          >
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-container text-on-primary-container">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-on-surface">{{ t('settings.aboutSource') }}</span>
+              <span class="mt-0.5 block text-xs text-on-surface-variant">{{ t('settings.aboutSourceDesc') }}</span>
+            </span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 shrink-0 text-on-surface-variant transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4h6v6M20 4 11 13" /><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-bad hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/issues/new/choose')"
+          >
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-error-container text-on-error-container">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 8v5m0 3h.01" /><path d="M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-on-surface">{{ t('settings.aboutReportIssue') }}</span>
+              <span class="mt-0.5 block text-xs text-on-surface-variant">{{ t('settings.aboutReportIssueDesc') }}</span>
+            </span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 shrink-0 text-on-surface-variant transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4h6v6M20 4 11 13" /><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-secondary hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/blob/main/LICENSE.md')"
+          >
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary-container text-on-secondary-container">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-on-surface">{{ t('settings.aboutLicense') }}</span>
+              <span class="mt-0.5 block text-xs text-on-surface-variant">{{ t('settings.aboutLicenseDesc') }}</span>
+            </span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 shrink-0 text-on-surface-variant transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4h6v6M20 4 11 13" /><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-tertiary hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/releases')"
+          >
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-tertiary-container text-on-tertiary-container">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path d="m4.5 7.7 7.5 4.4 7.5-4.4M12 12v9M8 5.3l8 4.5" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-on-surface">{{ t('settings.aboutReleases') }}</span>
+              <span class="mt-0.5 block text-xs text-on-surface-variant">{{ t('settings.aboutReleasesDesc') }}</span>
+            </span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 shrink-0 text-on-surface-variant transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4h6v6M20 4 11 13" /><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </SettingsSection>
 
     <!-- Confirmação de exclusão -->

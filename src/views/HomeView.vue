@@ -9,7 +9,11 @@ import { useUi } from '../stores/ui'
 import { fmtAgo } from '../lib/format'
 import { serviceDisplayName } from '../lib/service'
 import { stateLabel, tintOn, visualState } from '../lib/status'
-import StatusDot from '../components/ui/StatusDot.vue'
+import ServiceStatus from '../components/ui/ServiceStatus.vue'
+import ServiceHealthOverview, {
+  type ServiceHealthCounts,
+  type ServiceHealthFilter,
+} from '../components/ui/ServiceHealthOverview.vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppIconButton from '../components/ui/AppIconButton.vue'
 import AppCallout from '../components/ui/AppCallout.vue'
@@ -24,6 +28,7 @@ const ui = useUi()
 let suppressCardClick = false
 const draggingServiceId = ref<string | null>(null)
 const dropTargetId = ref<string | null>(null)
+const selectedHealthFilter = ref<ServiceHealthFilter>('all')
 
 const tiles = computed(() =>
   services.list.map((s) => ({
@@ -33,11 +38,32 @@ const tiles = computed(() =>
   })),
 )
 
-const sections = computed(() => {
-  const favorites = tiles.value.filter(({ service }) => service.favorite)
-  const groups = new Map<string, typeof tiles.value>()
-
+const healthCounts = computed<ServiceHealthCounts>(() => {
+  const counts: ServiceHealthCounts = { ok: 0, warn: 0, bad: 0, loading: 0, paused: 0 }
   for (const tile of tiles.value) {
+    counts[tile.service.monitoringPaused ? 'paused' : tile.state]++
+  }
+  return counts
+})
+
+const filteredTiles = computed(() => {
+  const filter = selectedHealthFilter.value
+  if (filter === 'all') return tiles.value
+  if (filter === 'paused') return tiles.value.filter(({ service }) => service.monitoringPaused)
+  return tiles.value.filter(({ service, state }) => !service.monitoringPaused && state === filter)
+})
+
+const activeFilterLabel = computed(() => {
+  const filter = selectedHealthFilter.value
+  if (filter === 'all') return ''
+  return t(filter === 'paused' ? 'settings.monitoringPaused' : `state.${filter}`)
+})
+
+const sections = computed(() => {
+  const favorites = filteredTiles.value.filter(({ service }) => service.favorite)
+  const groups = new Map<string, typeof filteredTiles.value>()
+
+  for (const tile of filteredTiles.value) {
     if (tile.service.favorite) continue
     const groupName = tile.service.group?.trim() ?? ''
     const group = services.groups.find((name) => name.toLowerCase() === groupName.toLowerCase()) ?? groupName
@@ -46,16 +72,17 @@ const sections = computed(() => {
     groups.set(group, groupTiles)
   }
 
-  const orderedGroups = services.groups.map((group) => {
+  const orderedGroups = services.groups.flatMap((group) => {
     const groupTiles = groups.get(group) ?? []
     groups.delete(group)
-    return {
+    if (!groupTiles.length && selectedHealthFilter.value !== 'all') return []
+    return [{
       id: `group:${group}`,
       label: group,
       group,
       favorite: false,
       tiles: groupTiles,
-    }
+    }]
   })
 
   const ungrouped = groups.get('') ?? []
@@ -70,16 +97,9 @@ const sections = computed(() => {
   ]
 })
 
-const summary = computed(() => {
-  const monitored = tiles.value.filter(({ service }) => !service.monitoringPaused)
-  const total = monitored.length
-  if (!total) return ''
-  const ok = monitored.filter((tile) => tile.state === 'ok').length
-  return t('home.summary', { total, ok, count: total })
-})
 
 const attention = computed(() =>
-  tiles.value
+  filteredTiles.value
     .filter(({ service, state }) =>
       !service.monitoringPaused && (state === 'bad' || state === 'warn'),
     )
@@ -150,6 +170,14 @@ function dropIntoSection(
         <h1 class="text-3xl font-semibold tracking-tight">{{ t('home.emptyTitle') }}</h1>
         <p class="mt-2 text-on-surface-variant">{{ t('home.emptyText') }}</p>
       </div>
+      <section v-if="ui.showTips" class="w-full rounded-3xl bg-surface-container p-5 text-left" :aria-label="t('home.onboardingTitle')">
+        <h2 class="font-semibold">{{ t('home.onboardingTitle') }}</h2>
+        <ol class="mt-3 flex flex-col gap-3 text-sm text-on-surface-variant">
+          <li class="flex gap-3"><span class="font-semibold text-primary">1</span><span>{{ t('home.onboardingChoose') }}</span></li>
+          <li class="flex gap-3"><span class="font-semibold text-primary">2</span><span>{{ t('home.onboardingCredentials') }}</span></li>
+          <li class="flex gap-3"><span class="font-semibold text-primary">3</span><span>{{ t('home.onboardingTest') }}</span></li>
+        </ol>
+      </section>
       <AppButton
         variant="filled"
         size="medium"
@@ -162,10 +190,39 @@ function dropIntoSection(
 
     <!-- Com serviços -->
     <template v-else-if="tiles.length">
-      <h1 class="text-4xl font-semibold tracking-tight">{{ t('home.title') }}</h1>
-      <p class="mt-1 text-on-surface-variant">{{ summary }}</p>
+      <header class="flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-4xl font-semibold tracking-tight">{{ t('home.title') }}</h1>
+        <AppButton
+          variant="filled"
+          icon="add"
+          @click="ui.openModal(null)"
+        >
+          {{ t('service.add') }}
+        </AppButton>
+      </header>
+      <ServiceHealthOverview
+        class="mt-4"
+        :counts="healthCounts"
+        :selected="selectedHealthFilter"
+        @select="selectedHealthFilter = $event"
+      />
+      <div
+        v-if="selectedHealthFilter !== 'all'"
+        class="mt-2 flex flex-wrap items-center gap-2 text-sm text-on-surface-variant"
+        aria-live="polite"
+      >
+        <span>{{ t('home.activeFilter', { status: activeFilterLabel }) }}</span>
+        <button
+          type="button"
+          class="font-medium text-primary underline-offset-2 hover:underline"
+          @click="selectedHealthFilter = 'all'"
+        >
+          {{ t('home.clearFilter') }}
+        </button>
+      </div>
 
       <AppCallout
+        v-if="ui.showTips"
         class="mt-4"
         variant="secondary"
         icon="drag_indicator"
@@ -199,7 +256,7 @@ function dropIntoSection(
             :key="tile.service.id"
             class="flex min-w-0 items-center gap-3 rounded-2xl bg-surface-high p-3 text-on-surface-variant"
           >
-            <StatusDot :state="tile.state" />
+            <ServiceStatus :state="tile.state" :show-label="false" />
             <m3e-button
               type="button"
               variant="text"
@@ -237,7 +294,7 @@ function dropIntoSection(
             {{ section.tiles.length }}
           </span>
           <span
-            v-if="dropTargetId === `section:${section.id}`"
+            v-if="ui.showTips && dropTargetId === `section:${section.id}`"
             class="ml-auto text-xs font-medium text-on-surface-variant"
           >
             {{ t('home.dropToGroup', { group: section.label }) }}
@@ -246,7 +303,7 @@ function dropIntoSection(
 
         <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-4">
           <p
-            v-if="!section.tiles.length"
+            v-if="ui.showTips && !section.tiles.length"
             class="col-span-full rounded-2xl border border-dashed border-outline-variant p-5 text-sm text-on-surface-variant"
           >
             {{ t('home.groupDrop') }}
@@ -291,6 +348,7 @@ function dropIntoSection(
                     icon="drag_indicator"
                     :label="t('home.dragHandle', { name: serviceDisplayName(tile.service) })"
                     :draggable="true"
+                    :show-tooltip="ui.showTips"
                     class="-mr-2 -mt-2 cursor-grab active:cursor-grabbing"
                     @click.stop
                     @dragstart="startDragging(tile.service.id, $event)"
@@ -299,19 +357,11 @@ function dropIntoSection(
                 </div>
 
                 <div class="min-w-0 rounded-2xl bg-surface/70 px-3 py-2.5">
-                  <div class="flex items-center gap-2 text-sm font-medium">
-                    <template v-if="tile.service.monitoringPaused">
-                      <span
-                        aria-hidden="true"
-                        class="material-symbols-rounded text-base text-on-surface-variant"
-                      >pause_circle</span>
-                      {{ t('settings.monitoringPaused') }}
-                    </template>
-                    <template v-else>
-                      <StatusDot :state="tile.state" />
-                      {{ stateLabel(tile.state) }}
-                    </template>
-                  </div>
+                  <ServiceStatus
+                    :state="tile.state"
+                    :paused="tile.service.monitoringPaused"
+                    class="text-sm font-medium"
+                  />
                   <span
                     v-if="!ui.hideAddresses"
                     class="mt-1 block truncate text-xs text-on-surface-variant"
@@ -353,7 +403,7 @@ function dropIntoSection(
                       : t('home.waitingForCheck') }}
                   </span>
                   <span
-                    v-if="dropTargetId === tile.service.id"
+                    v-if="ui.showTips && dropTargetId === tile.service.id"
                     class="shrink-0 font-medium text-primary"
                   >
                     {{ t('home.dropToReorder') }}
@@ -363,7 +413,7 @@ function dropIntoSection(
             </m3e-card>
 
             <div class="mt-1 flex flex-wrap items-center justify-between gap-1">
-              <span class="px-2 text-[11px] text-on-surface-variant">
+              <span v-if="ui.showTips" class="px-2 text-[11px] text-on-surface-variant">
                 {{ t('home.reorderHint') }}
               </span>
               <span class="flex gap-1">
@@ -403,6 +453,14 @@ function dropIntoSection(
           </div>
         </div>
       </section>
+
+      <p
+        v-if="selectedHealthFilter !== 'all' && !filteredTiles.length"
+        class="mt-8 rounded-2xl bg-surface-container p-5 text-sm text-on-surface-variant"
+        role="status"
+      >
+        {{ t('home.noFilterMatches') }}
+      </p>
 
       <div class="mt-8 grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-4">
         <m3e-card

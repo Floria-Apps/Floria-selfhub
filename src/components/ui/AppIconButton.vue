@@ -26,6 +26,7 @@ const props = withDefaults(defineProps<{
   pressed?: boolean
   loading?: boolean
   draggable?: boolean
+  showTooltip?: boolean
 }>(), {
   variant: 'standard',
   size: 'small',
@@ -35,6 +36,7 @@ const props = withDefaults(defineProps<{
   disabled: false,
   loading: false,
   draggable: false,
+  showTooltip: true,
 })
 
 const emit = defineEmits<{
@@ -84,7 +86,7 @@ function onClick(event: Event) {
     </span>
   </m3e-icon-button>
 
-  <m3e-tooltip :for="tooltipId" position="below" show-delay="500">
+  <m3e-tooltip v-if="showTooltip" :for="tooltipId" position="below" show-delay="500">
     {{ label }}
   </m3e-tooltip>
 </template>

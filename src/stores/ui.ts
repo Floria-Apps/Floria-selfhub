@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
 import type { ThemeVariant } from '@m3e/web/theme'
@@ -43,6 +44,8 @@ export interface Prefs {
   seedColor: string
   refreshSeconds: number
   hideAddresses: boolean
+  showTips: boolean
+  closeToTray: boolean
   notificationsEnabled: boolean
 }
 
@@ -55,6 +58,8 @@ export const useUi = defineStore('ui', () => {
   const seedColor = ref(DEFAULT_SEED)
   const refreshSeconds = ref(30)
   const hideAddresses = ref(false)
+  const showTips = ref(true)
+  const closeToTray = ref(true)
   const notificationsEnabled = ref(false)
   const startOnLogin = ref(false)
 
@@ -78,6 +83,8 @@ export const useUi = defineStore('ui', () => {
     seedColor: seedColor.value,
     refreshSeconds: refreshSeconds.value,
     hideAddresses: hideAddresses.value,
+    showTips: showTips.value,
+    closeToTray: closeToTray.value,
     notificationsEnabled: notificationsEnabled.value,
   })
 
@@ -106,6 +113,8 @@ export const useUi = defineStore('ui', () => {
       seedColor.value = p.seedColor.toLowerCase()
     if (REFRESH_OPTIONS.includes(p.refreshSeconds as number)) refreshSeconds.value = p.refreshSeconds as number
     if (typeof p.hideAddresses === 'boolean') hideAddresses.value = p.hideAddresses
+    if (typeof p.showTips === 'boolean') showTips.value = p.showTips
+    if (typeof p.closeToTray === 'boolean') closeToTray.value = p.closeToTray
     if (typeof p.notificationsEnabled === 'boolean') notificationsEnabled.value = p.notificationsEnabled
   }
 
@@ -151,8 +160,29 @@ export const useUi = defineStore('ui', () => {
     })
     applyPrefs(await getItem<unknown>('prefs', {}))
     watch(
-      [mode, contrast, themeVariant, locale, dynamicColor, seedColor, refreshSeconds, hideAddresses, notificationsEnabled],
+      [mode, contrast, themeVariant, locale, dynamicColor, seedColor, refreshSeconds, hideAddresses, showTips, closeToTray, notificationsEnabled],
       () => setItem('prefs', prefs()),
+    )
+    if (isDesktop) {
+      try {
+        await invoke('set_close_to_tray', { enabled: closeToTray.value })
+      } catch {
+        console.error('Falha ao carregar a preferência de fechar para a bandeja')
+        showToast(t('settings.systemIntegrationError'), 'error')
+      }
+    }
+    watch(
+      closeToTray,
+      async (enabled, previous) => {
+        if (!isDesktop) return
+        try {
+          await invoke('set_close_to_tray', { enabled })
+        } catch {
+          closeToTray.value = previous
+          console.error('Falha ao alterar o comportamento ao fechar a janela')
+          showToast(t('settings.systemIntegrationError'), 'error')
+        }
+      },
     )
     watch(
       languagePreference,
@@ -173,7 +203,7 @@ export const useUi = defineStore('ui', () => {
   }
 
   function resetPrefs() {
-    applyPrefs({ mode: 'auto', contrast: 'standard', themeVariant: 'tonal-spot', locale: 'auto', dynamicColor: true, seedColor: DEFAULT_SEED, refreshSeconds: 30, hideAddresses: false })
+    applyPrefs({ mode: 'auto', contrast: 'standard', themeVariant: 'tonal-spot', locale: 'auto', dynamicColor: true, seedColor: DEFAULT_SEED, refreshSeconds: 30, hideAddresses: false, showTips: true, closeToTray: true })
     notificationsEnabled.value = false
   }
 
@@ -200,7 +230,7 @@ export const useUi = defineStore('ui', () => {
   }
 
   return {
-    mode, contrast, themeVariant, languagePreference, dynamicColor, seedColor, refreshSeconds, hideAddresses, notificationsEnabled, startOnLogin, isDark, omniboxTick, focusOmnibox,
+    mode, contrast, themeVariant, languagePreference, dynamicColor, seedColor, refreshSeconds, hideAddresses, showTips, closeToTray, notificationsEnabled, startOnLogin, isDark, omniboxTick, focusOmnibox,
     prefs, applyPrefs, load, resetPrefs,
     setLanguagePreference,
     setNotificationsEnabled, setStartOnLogin,
