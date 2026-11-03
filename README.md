@@ -40,21 +40,26 @@ Floria SelfHub brings the services in your homelab or self-hosted environment to
 
 ## Supported services
 
-| Service | Integration |
-| --- | --- |
-| Jellyfin | Sessions and library information |
-| Navidrome | Now playing and library information |
-| Uptime Kuma | Monitor status |
-| Gatus | Endpoint health |
-| Speedtest Tracker | Internet speed history |
-| Cup | Container image updates |
-| What's Up Docker | Container updates |
-| AdGuard Home | DNS and blocking information |
-| qBittorrent | Download information |
-| Jellyseerr | Media requests |
-| Radarr / Sonarr / Lidarr | Arr ecosystem information |
-| Immich | Photo service information |
-| Multi-scrobbler | Media scrobbling information |
+| Service | Integration | API / protocol |
+| --- | --- | --- |
+| Jellyfin | Sessions and library information | REST (no explicit version) |
+| Navidrome | Now playing and library information | Subsonic API 1.16.1 |
+| Uptime Kuma | Monitor status | Status page API (no explicit version) |
+| Gatus | Endpoint health | API v1 (with legacy-route fallback) |
+| Speedtest Tracker | Internet speed history | API v1 |
+| Cup | Container image updates | API v3 |
+| What's Up Docker | Container updates | REST (no explicit version) |
+| AdGuard Home | DNS and blocking information | Control API (no explicit version) |
+| qBittorrent | Download information | Web API v2 |
+| Jellyseerr | Media requests | API v1 |
+| Radarr | Arr ecosystem information | API v3 |
+| Sonarr | Arr ecosystem information | API v3 |
+| Lidarr | Arr ecosystem information | API v1 |
+| Readarr | Arr ecosystem information | API v1 |
+| Prowlarr | Arr ecosystem information | API v1 |
+| Bazarr | Arr ecosystem information | REST (no explicit version) |
+| Immich | Photo service information | REST (no explicit version) |
+| Multi-scrobbler | Media scrobbling information | Prometheus metrics endpoint (no explicit version) |
 
 > More integrations are planned. Service availability may depend on the API version and permissions configured on your instance.
 
