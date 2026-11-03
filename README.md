@@ -201,7 +201,9 @@ Please describe the operating system, package format and steps to reproduce when
 
 ## License
 
-See [LICENSE.md](LICENSE.md) for the project license.
+**Floria SelfHub is licensed under the GNU General Public License, version 3 only (GPL-3.0-only).**
+
+Read the [full license text](LICENSE.md) in this repository or the [official GPL-3.0 text](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 <p align="center">
   <strong>Floria SelfHub</strong><br>

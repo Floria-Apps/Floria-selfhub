@@ -2,6 +2,7 @@
 name = "selfhub"
 version = "1.4.1"
 description = "Painel em abas para as APIs dos seus apps self-host"
+license = "GPL-3.0-only"
 edition = "2021"
 
 [lib]
