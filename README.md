@@ -42,24 +42,24 @@ Floria SelfHub brings the services in your homelab or self-hosted environment to
 
 | Service | Integration | API / protocol |
 | --- | --- | --- |
-| <img src="https://cdn.simpleicons.org/jellyfin/00A4DC" width="18" alt=""> Jellyfin | Sessions and library information | REST (no explicit version) |
-| <img src="https://cdn.simpleicons.org/navidrome/6B4FBB" width="18" alt=""> Navidrome | Now playing and library information | Subsonic API 1.16.1 |
-| <img src="https://cdn.simpleicons.org/uptimekuma/5CDD8B" width="18" alt=""> Uptime Kuma | Monitor status | Status page API (no explicit version) |
-| <img src="https://cdn.simpleicons.org/gatus/4CAF50" width="18" alt=""> Gatus | Endpoint health | API v1 (with legacy-route fallback) |
-| <img src="https://cdn.simpleicons.org/speedtest/141526" width="18" alt=""> Speedtest Tracker | Internet speed history | API v1 |
-| 📦 Cup | Container image updates | API v3 |
-| 🐳 What's Up Docker | Container updates | REST (no explicit version) |
-| <img src="https://cdn.simpleicons.org/adguard/68BC71" width="18" alt=""> AdGuard Home | DNS and blocking information | Control API (no explicit version) |
-| <img src="https://cdn.simpleicons.org/qbittorrent/2F67BA" width="18" alt=""> qBittorrent | Download information | Web API v2 |
-| <img src="https://cdn.simpleicons.org/jellyseerr/8B5CF6" width="18" alt=""> Jellyseerr | Media requests | API v1 |
-| <img src="https://cdn.simpleicons.org/radarr/FFC230" width="18" alt=""> Radarr | Arr ecosystem information | API v3 |
-| <img src="https://cdn.simpleicons.org/sonarr/35C5F4" width="18" alt=""> Sonarr | Arr ecosystem information | API v3 |
-| <img src="https://cdn.simpleicons.org/lidarr/00C8A9" width="18" alt=""> Lidarr | Arr ecosystem information | API v1 |
-| <img src="https://cdn.simpleicons.org/readarr/6B9E78" width="18" alt=""> Readarr | Arr ecosystem information | API v1 |
-| <img src="https://cdn.simpleicons.org/prowlarr/E66000" width="18" alt=""> Prowlarr | Arr ecosystem information | API v1 |
-| 🎬 Bazarr | Arr ecosystem information | REST (no explicit version) |
-| <img src="https://cdn.simpleicons.org/immich/4250AF" width="18" alt=""> Immich | Photo service information | REST (no explicit version) |
-| 📊 Multi-scrobbler | Media scrobbling information | Prometheus metrics endpoint (no explicit version) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyfin.svg" width="18" alt="Jellyfin"> Jellyfin](https://jellyfin.org/) | Sessions and library information | REST (no explicit version) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/navidrome.svg" width="18" alt="Navidrome"> Navidrome](https://www.navidrome.org/) | Now playing and library information | Subsonic API 1.16.1 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" width="18" alt="Uptime Kuma"> Uptime Kuma](https://github.com/louislam/uptime-kuma) | Monitor status | Status page API (no explicit version) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/gatus.svg" width="18" alt="Gatus"> Gatus](https://github.com/TwiN/gatus) | Endpoint health | API v1 (with legacy-route fallback) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/speedtest-tracker.svg" width="18" alt="Speedtest Tracker"> Speedtest Tracker](https://github.com/alexjustesen/speedtest-tracker) | Internet speed history | API v1 |
+| [📦 Cup](https://github.com/sergi0g/cup) | Container image updates | API v3 |
+| [🐳 What's Up Docker](https://getwud.github.io/wud/) | Container updates | REST (no explicit version) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/adguard-home.svg" width="18" alt="AdGuard Home"> AdGuard Home](https://adguard.com/adguard-home/overview.html) | DNS and blocking information | Control API (no explicit version) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/qbittorrent.svg" width="18" alt="qBittorrent"> qBittorrent](https://www.qbittorrent.org/) | Download information | Web API v2 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyseerr.svg" width="18" alt="Jellyseerr"> Jellyseerr](https://github.com/Fallenbagel/jellyseerr) | Media requests | API v1 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/radarr.svg" width="18" alt="Radarr"> Radarr](https://radarr.video/) | Arr ecosystem information | API v3 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/sonarr.svg" width="18" alt="Sonarr"> Sonarr](https://sonarr.tv/) | Arr ecosystem information | API v3 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/lidarr.svg" width="18" alt="Lidarr"> Lidarr](https://lidarr.audio/) | Arr ecosystem information | API v1 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/readarr.svg" width="18" alt="Readarr"> Readarr](https://github.com/Readarr/Readarr) | Arr ecosystem information | API v1 |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prowlarr.svg" width="18" alt="Prowlarr"> Prowlarr](https://prowlarr.com/) | Arr ecosystem information | API v1 |
+| [🎬 Bazarr](https://www.bazarr.media/) | Arr ecosystem information | REST (no explicit version) |
+| [<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/immich.svg" width="18" alt="Immich"> Immich](https://immich.app/) | Photo service information | REST (no explicit version) |
+| [📊 Multi-scrobbler](https://github.com/muety/multi-scrobbler) | Media scrobbling information | Prometheus metrics endpoint (no explicit version) |
 
 > More integrations are planned. Service availability may depend on the API version and permissions configured on your instance.
 
