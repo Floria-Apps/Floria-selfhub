@@ -65,22 +65,28 @@ Floria SelfHub brings the services in your homelab or self-hosted environment to
 
 ## Screenshots
 
-### Dark mode
+### Overview
 
 <p align="center">
-  <img src="gallery/1.png" width="49%" alt="Floria SelfHub dark mode dashboard">
-  <img src="gallery/2.png" width="49%" alt="Floria SelfHub dark mode service view">
+  <img src="gallery/overview-dashboard.png" width="80%" alt="Floria SelfHub overview dashboard">
+</p>
+
+### Service integrations
+
+<p align="center">
+  <img src="gallery/navidrome.png" width="49%" alt="Navidrome integration in Floria SelfHub">
+  <img src="gallery/multi-scrobbler.png" width="49%" alt="Multi-Scrobbler integration in Floria SelfHub">
 </p>
 
 <p align="center">
-  <img src="gallery/3.png" width="49%" alt="Floria SelfHub dark mode settings">
-  <img src="gallery/4.png" width="49%" alt="Floria SelfHub dark mode history">
+  <img src="gallery/cup-dark.png" width="49%" alt="Cup integration in dark mode">
+  <img src="gallery/cup-light.png" width="49%" alt="Cup integration in light mode">
 </p>
 
-### Light mode
+### Settings
 
 <p align="center">
-  <img src="gallery/11.png" width="49%" alt="Floria SelfHub light mode">
+  <img src="gallery/settings-appearance.png" width="80%" alt="Floria SelfHub appearance and language settings">
 </p>
 
 ## Installation
