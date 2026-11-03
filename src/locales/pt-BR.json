@@ -385,7 +385,7 @@
   "settings.aboutLogoAlt": "Ícone do Floria SelfHub",
   "settings.aboutVersion": "Versão {version}",
   "settings.aboutTagline": "Um painel privado para monitorar seus serviços self-hosted.",
-  "settings.aboutPrivacy": "Serviços, credenciais e preferências são armazenados neste dispositivo. Tokens, nomes de usuário e senhas dos campos de autenticação não são incluídos nas exportações; as credenciais são usadas para autenticar chamadas aos serviços configurados. Ao abrir Configurações, o app consulta a API pública do GitHub para verificar atualizações.",
+  "settings.aboutPrivacy": "Serviços e preferências são armazenados neste dispositivo. No app para desktop e iOS, tokens, nomes de usuário e senhas ficam no chaveiro do sistema; no Android e na versão de navegador, ficam no armazenamento local sem criptografia. Esses dados de autenticação não são incluídos nas exportações e são usados nas chamadas aos serviços configurados. Ao abrir Configurações, o app consulta a API pública do GitHub para verificar atualizações.",
   "settings.aboutUpdateCheckPrompt": "Verifique se há uma versão mais recente.",
   "settings.aboutCheckingUpdates": "Verificando atualizações…",
   "settings.aboutUpToDate": "Você está na versão mais recente ({version}).",

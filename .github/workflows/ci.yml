@@ -69,7 +69,8 @@ jobs:
             librsvg2-dev \
             patchelf \
             libwebkit2gtk-4.1-dev \
-            libgtk-3-dev
+            libgtk-3-dev \
+            libdbus-1-dev
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

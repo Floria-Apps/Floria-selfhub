@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{image::Image, Manager, State};
 
@@ -11,6 +12,74 @@ use tauri::{
 #[tauri::command]
 fn set_close_to_tray(enabled: bool, close_to_tray: State<'_, AtomicBool>) {
     close_to_tray.store(enabled, Ordering::Relaxed);
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct ServiceCredentials {
+    token: Option<String>,
+    username: Option<String>,
+    password: Option<String>,
+}
+
+impl ServiceCredentials {
+    fn is_empty(&self) -> bool {
+        self.token.is_none() && self.username.is_none() && self.password.is_none()
+    }
+}
+
+fn credential_entry(service_id: &str) -> Result<keyring::Entry, String> {
+    if service_id.is_empty()
+        || service_id.len() > 128
+        || !service_id.chars().all(|character| {
+            character.is_ascii_alphanumeric() || character == '-' || character == '_'
+        })
+    {
+        return Err("Invalid service identifier".into());
+    }
+
+    keyring::Entry::new("dev.selfhub.app", service_id)
+        .map_err(|_| "Could not access the system credential store".to_string())
+}
+
+#[tauri::command]
+fn get_service_credentials(service_id: String) -> Result<Option<ServiceCredentials>, String> {
+    let entry = credential_entry(&service_id)?;
+    match entry.get_password() {
+        Ok(value) => serde_json::from_str(&value)
+            .map(Some)
+            .map_err(|_| "Stored service credentials are invalid".to_string()),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        Err(_) => Err("Could not read from the system credential store".into()),
+    }
+}
+
+#[tauri::command]
+fn set_service_credentials(
+    service_id: String,
+    credentials: ServiceCredentials,
+) -> Result<(), String> {
+    let entry = credential_entry(&service_id)?;
+    if credentials.is_empty() {
+        return match entry.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(_) => Err("Could not remove credentials from the system store".into()),
+        };
+    }
+
+    let value = serde_json::to_string(&credentials)
+        .map_err(|_| "Could not encode service credentials".to_string())?;
+    entry
+        .set_password(&value)
+        .map_err(|_| "Could not save to the system credential store".to_string())
+}
+
+#[tauri::command]
+fn delete_service_credentials(service_id: String) -> Result<(), String> {
+    let entry = credential_entry(&service_id)?;
+    match entry.delete_credential() {
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        Err(_) => Err("Could not remove credentials from the system store".into()),
+    }
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -46,7 +115,12 @@ pub fn run() {
 
     builder
         .manage(AtomicBool::new(true))
-        .invoke_handler(tauri::generate_handler![set_close_to_tray])
+        .invoke_handler(tauri::generate_handler![
+            set_close_to_tray,
+            get_service_credentials,
+            set_service_credentials,
+            delete_service_credentials,
+        ])
         .setup(|app| {
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             {

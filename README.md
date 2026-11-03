@@ -169,7 +169,9 @@ pnpm tauri dev
 
 Service configuration, preferences and local application data are stored on the device. Floria SelfHub does not provide a hosted service and does not require an account. Network requests are made to the service endpoints configured by the user.
 
-Treat API tokens and service credentials as sensitive information. Do not commit exported configuration files containing secrets.
+In desktop and iOS builds, API tokens, usernames and passwords are stored in the operating system's credential store (Secret Service on Linux, Keychain on macOS/iOS and Credential Manager on Windows). Credentials saved by older versions are migrated to the system store on first launch. Android and browser builds keep credentials in local storage without app-level encryption.
+
+Exported configuration files omit the dedicated token, username and password fields. Treat service addresses and exported configuration files as sensitive, and do not commit them.
 
 ## Releases
 

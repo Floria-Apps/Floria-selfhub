@@ -385,7 +385,7 @@
   "settings.aboutLogoAlt": "Floria SelfHub icon",
   "settings.aboutVersion": "Version {version}",
   "settings.aboutTagline": "A private dashboard for monitoring your self-hosted services.",
-  "settings.aboutPrivacy": "Services, credentials, and preferences are stored on this device. Tokens, usernames, and passwords entered in authentication fields are not included in exports; credentials are used to authenticate requests to your configured services. When Settings opens, the app queries GitHub's public API to check for updates.",
+  "settings.aboutPrivacy": "Services and preferences are stored on this device. In the desktop and iOS apps, tokens, usernames, and passwords are kept in the system credential store; on Android and in a browser, they remain in local storage without app-level encryption. These authentication fields are excluded from exports and are used for requests to your configured services. When Settings opens, the app queries GitHub's public API to check for updates.",
   "settings.aboutUpdateCheckPrompt": "Check whether a newer version is available.",
   "settings.aboutCheckingUpdates": "Checking for updates…",
   "settings.aboutUpToDate": "You are using the latest version ({version}).",

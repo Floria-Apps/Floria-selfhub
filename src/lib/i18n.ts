@@ -5,6 +5,7 @@ import { locale as getOsLocale, platform } from '@tauri-apps/plugin-os'
 
 export type Locale = string
 export const isDesktop = isTauri() && !['android', 'ios'].includes(platform())
+export const usesSystemCredentialStore = isTauri() && platform() !== 'android'
 
 type Messages = Record<string, string>
 
