@@ -68,25 +68,37 @@ Floria SelfHub brings the services in your homelab or self-hosted environment to
 ### Overview
 
 <p align="center">
-  <img src="gallery/overview-dashboard.png" width="80%" alt="Floria SelfHub overview dashboard">
+  <img src="gallery/overview-green.png" width="80%" alt="Floria SelfHub overview dashboard with a green theme">
+</p>
+
+<p align="center">
+  <img src="gallery/home-strong-color.png" width="80%" alt="Floria SelfHub home screen with a vibrant theme">
 </p>
 
 ### Service integrations
 
 <p align="center">
-  <img src="gallery/navidrome.png" width="49%" alt="Navidrome integration in Floria SelfHub">
+  <img src="gallery/navidrome-vibrant-color.png" width="49%" alt="Navidrome integration with a vibrant theme">
   <img src="gallery/multi-scrobbler.png" width="49%" alt="Multi-Scrobbler integration in Floria SelfHub">
 </p>
 
 <p align="center">
-  <img src="gallery/cup-dark.png" width="49%" alt="Cup integration in dark mode">
-  <img src="gallery/cup-light.png" width="49%" alt="Cup integration in light mode">
+  <img src="gallery/cup.png" width="49%" alt="Cup integration in Floria SelfHub">
+  <img src="gallery/cup-natural-colors.png" width="49%" alt="Cup integration with natural colors">
+</p>
+
+<p align="center">
+  <img src="gallery/adguard-add-ip.png" width="80%" alt="AdGuard Home service configuration">
 </p>
 
 ### Settings
 
 <p align="center">
-  <img src="gallery/settings-appearance.png" width="80%" alt="Floria SelfHub appearance and language settings">
+  <img src="gallery/settings-auto-contrast-custom-color.png" width="80%" alt="Settings for automatic contrast and custom colors">
+</p>
+
+<p align="center">
+  <img src="gallery/settings-groups-and-services.png" width="80%" alt="Settings for service groups and organization">
 </p>
 
 ## Installation
