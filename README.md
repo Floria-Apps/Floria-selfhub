@@ -42,24 +42,24 @@ Floria SelfHub brings the services in your homelab or self-hosted environment to
 
 | Service | Integration | API / protocol |
 | --- | --- | --- |
-| Jellyfin | Sessions and library information | REST (no explicit version) |
-| Navidrome | Now playing and library information | Subsonic API 1.16.1 |
-| Uptime Kuma | Monitor status | Status page API (no explicit version) |
-| Gatus | Endpoint health | API v1 (with legacy-route fallback) |
-| Speedtest Tracker | Internet speed history | API v1 |
-| Cup | Container image updates | API v3 |
-| What's Up Docker | Container updates | REST (no explicit version) |
-| AdGuard Home | DNS and blocking information | Control API (no explicit version) |
-| qBittorrent | Download information | Web API v2 |
-| Jellyseerr | Media requests | API v1 |
-| Radarr | Arr ecosystem information | API v3 |
-| Sonarr | Arr ecosystem information | API v3 |
-| Lidarr | Arr ecosystem information | API v1 |
-| Readarr | Arr ecosystem information | API v1 |
-| Prowlarr | Arr ecosystem information | API v1 |
-| Bazarr | Arr ecosystem information | REST (no explicit version) |
-| Immich | Photo service information | REST (no explicit version) |
-| Multi-scrobbler | Media scrobbling information | Prometheus metrics endpoint (no explicit version) |
+| <img src="https://cdn.simpleicons.org/jellyfin/00A4DC" width="18" alt=""> Jellyfin | Sessions and library information | REST (no explicit version) |
+| <img src="https://cdn.simpleicons.org/navidrome/6B4FBB" width="18" alt=""> Navidrome | Now playing and library information | Subsonic API 1.16.1 |
+| <img src="https://cdn.simpleicons.org/uptimekuma/5CDD8B" width="18" alt=""> Uptime Kuma | Monitor status | Status page API (no explicit version) |
+| <img src="https://cdn.simpleicons.org/gatus/4CAF50" width="18" alt=""> Gatus | Endpoint health | API v1 (with legacy-route fallback) |
+| <img src="https://cdn.simpleicons.org/speedtest/141526" width="18" alt=""> Speedtest Tracker | Internet speed history | API v1 |
+| 📦 Cup | Container image updates | API v3 |
+| 🐳 What's Up Docker | Container updates | REST (no explicit version) |
+| <img src="https://cdn.simpleicons.org/adguard/68BC71" width="18" alt=""> AdGuard Home | DNS and blocking information | Control API (no explicit version) |
+| <img src="https://cdn.simpleicons.org/qbittorrent/2F67BA" width="18" alt=""> qBittorrent | Download information | Web API v2 |
+| <img src="https://cdn.simpleicons.org/jellyseerr/8B5CF6" width="18" alt=""> Jellyseerr | Media requests | API v1 |
+| <img src="https://cdn.simpleicons.org/radarr/FFC230" width="18" alt=""> Radarr | Arr ecosystem information | API v3 |
+| <img src="https://cdn.simpleicons.org/sonarr/35C5F4" width="18" alt=""> Sonarr | Arr ecosystem information | API v3 |
+| <img src="https://cdn.simpleicons.org/lidarr/00C8A9" width="18" alt=""> Lidarr | Arr ecosystem information | API v1 |
+| <img src="https://cdn.simpleicons.org/readarr/6B9E78" width="18" alt=""> Readarr | Arr ecosystem information | API v1 |
+| <img src="https://cdn.simpleicons.org/prowlarr/E66000" width="18" alt=""> Prowlarr | Arr ecosystem information | API v1 |
+| 🎬 Bazarr | Arr ecosystem information | REST (no explicit version) |
+| <img src="https://cdn.simpleicons.org/immich/4250AF" width="18" alt=""> Immich | Photo service information | REST (no explicit version) |
+| 📊 Multi-scrobbler | Media scrobbling information | Prometheus metrics endpoint (no explicit version) |
 
 > More integrations are planned. Service availability may depend on the API version and permissions configured on your instance.
 
