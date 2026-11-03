@@ -1,7 +1,7 @@
 import type { ClientOptions } from '@tauri-apps/plugin-http'
 import { isTauri } from './http'
 
-const LATEST_RELEASE_URL = 'https://api.github.com/repos/FloriaApps/Floria-selfhub/releases/latest'
+const LATEST_RELEASE_URL = 'https://api.github.com/repos/Floria-Apps/Floria-selfhub/releases/latest'
 
 function versionParts(version: string): { core: number[]; prerelease: string[] } | null {
   const match = version.trim().replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/)

@@ -886,7 +886,7 @@ function importConfig() {
             <AppButton
               v-else
               variant="filled"
-              @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/releases/latest')"
+              @click="openExternal('https://github.com/Floria-Apps/Floria-selfhub/releases/latest')"
             >
               {{ t('settings.aboutDownloadUpdate') }}
             </AppButton>
@@ -901,7 +901,7 @@ function importConfig() {
           <button
             type="button"
             class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-primary hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub')"
+            @click="openExternal('https://github.com/Floria-Apps/Floria-selfhub')"
           >
             <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-container text-on-primary-container">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -920,7 +920,7 @@ function importConfig() {
           <button
             type="button"
             class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-bad hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/issues/new/choose')"
+            @click="openExternal('https://github.com/Floria-Apps/Floria-selfhub/issues/new/choose')"
           >
             <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-error-container text-on-error-container">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -939,7 +939,7 @@ function importConfig() {
           <button
             type="button"
             class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-secondary hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/blob/main/LICENSE.md')"
+            @click="openExternal('https://github.com/Floria-Apps/Floria-selfhub/blob/main/LICENSE.md')"
           >
             <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary-container text-on-secondary-container">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -958,7 +958,7 @@ function importConfig() {
           <button
             type="button"
             class="group flex min-w-0 items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container p-3 text-left transition-colors hover:border-tertiary hover:bg-surface-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            @click="openExternal('https://github.com/FloriaApps/Floria-selfhub/releases')"
+            @click="openExternal('https://github.com/Floria-Apps/Floria-selfhub/releases')"
           >
             <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-tertiary-container text-on-tertiary-container">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

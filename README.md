@@ -1,7 +1,7 @@
 # Floria SelfHub
 
 <p align="center">
-  <img src="src-tauri/icons/floria-selfhub/floria-selfhub-background.svg" width="160" alt="Floria SelfHub logo">
+  <img src="src-tauri/icons/floria-selfhub/floria-selfhub-256.png" width="160" alt="Floria SelfHub logo">
 </p>
 
 <p align="center">
@@ -10,14 +10,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/FloriaApps/Floria-selfhub/releases">
-    <img src="https://img.shields.io/github/v/release/FloriaApps/Floria-selfhub?style=flat-square" alt="Latest release">
+  <a href="https://github.com/Floria-Apps/Floria-selfhub/releases/latest">
+    <img src="https://img.shields.io/github/v/release/Floria-Apps/Floria-selfhub?display_name=tag&style=flat-square&label=release" alt="Latest release">
   </a>
-  <a href="https://github.com/FloriaApps/Floria-selfhub/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/FloriaApps/Floria-selfhub/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status">
+  <a href="https://github.com/Floria-Apps/Floria-selfhub/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/Floria-Apps/Floria-selfhub/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status">
   </a>
-  <a href="https://github.com/FloriaApps/Floria-selfhub/blob/main/LICENSE.md">
-    <img src="https://img.shields.io/github/license/FloriaApps/Floria-selfhub?style=flat-square" alt="License">
+  <a href="https://github.com/Floria-Apps/Floria-selfhub/blob/main/LICENSE.md">
+    <img src="https://img.shields.io/github/license/Floria-Apps/Floria-selfhub?style=flat-square" alt="License">
+  </a>
+  <a href="https://github.com/Floria-Apps/Floria-selfhub">
+    <img src="https://img.shields.io/github/stars/Floria-Apps/Floria-selfhub?style=flat-square&label=GitHub%20stars" alt="GitHub stars">
   </a>
 </p>
 
@@ -77,7 +80,7 @@ Floria SelfHub brings the services in your homelab or self-hosted environment to
 
 ## Installation
 
-Download the latest release from the [GitHub Releases page](https://github.com/FloriaApps/Floria-selfhub/releases).
+Download the latest release from the [GitHub Releases page](https://github.com/Floria-Apps/Floria-selfhub/releases).
 
 ### Linux
 
