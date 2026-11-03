@@ -4,11 +4,17 @@ import { createPinia } from 'pinia'
 import '@fontsource-variable/roboto-flex'
 
 import './style.css'
-import './plugins/m3e'
 import App from './App.vue'
 import { i18n } from './lib/i18n'
+import { registerM3e } from './plugins/m3e'
 
-createApp(App)
-  .use(createPinia())
-  .use(i18n)
-  .mount('#app')
+async function bootstrap() {
+  await registerM3e()
+
+  createApp(App)
+    .use(createPinia())
+    .use(i18n)
+    .mount('#app')
+}
+
+void bootstrap()

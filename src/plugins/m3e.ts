@@ -1,29 +1,33 @@
-import '@m3e/web/core'
-import '@m3e/web/theme'
-import '@m3e/web/button'
-import '@m3e/web/icon-button'
-import '@m3e/web/switch'
-import '@m3e/web/segmented-button'
-import '@m3e/web/icon'
-import '@m3e/web/dialog'
-import '@m3e/web/form-field'
-import '@m3e/web/checkbox'
-import '@m3e/web/card'
-import '@m3e/web/split-pane'
-import '@m3e/web/list'
-import '@m3e/web/search'
-import '@m3e/web/snackbar'
-import '@m3e/web/tooltip'
-import '@m3e/web/loading-indicator'
-import '@m3e/web/progress-indicator'
-import '@m3e/web/badge'
-import '@m3e/web/skeleton'
-import '@m3e/web/divider'
-import '@m3e/web/expansion-panel'
-import '@m3e/web/callout'
-import '@m3e/web/option'
-import '@m3e/web/select'
-import '@m3e/web/textarea-autosize'
+export async function registerM3e() {
+  await Promise.all([
+    import('@m3e/web/core'),
+    import('@m3e/web/theme'),
+    import('@m3e/web/button'),
+    import('@m3e/web/icon-button'),
+    import('@m3e/web/switch'),
+    import('@m3e/web/segmented-button'),
+    import('@m3e/web/icon'),
+    import('@m3e/web/dialog'),
+    import('@m3e/web/form-field'),
+    import('@m3e/web/checkbox'),
+    import('@m3e/web/card'),
+    import('@m3e/web/split-pane'),
+    import('@m3e/web/list'),
+    import('@m3e/web/search'),
+    import('@m3e/web/snackbar'),
+    import('@m3e/web/tooltip'),
+    import('@m3e/web/loading-indicator'),
+    import('@m3e/web/progress-indicator'),
+    import('@m3e/web/badge'),
+    import('@m3e/web/skeleton'),
+    import('@m3e/web/divider'),
+    import('@m3e/web/expansion-panel'),
+    import('@m3e/web/callout'),
+    import('@m3e/web/option'),
+    import('@m3e/web/select'),
+    import('@m3e/web/textarea-autosize'),
+  ])
+}
 
 // Componentes ainda não usados no app:
 // import '@m3e/web/menu'
