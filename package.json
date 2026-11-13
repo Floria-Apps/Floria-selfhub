@@ -28,7 +28,7 @@
     "vue-i18n": "^11.4.17"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.5",
     "@tauri-apps/cli": "^2.12.4",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.10",
